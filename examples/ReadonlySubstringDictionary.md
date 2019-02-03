@@ -1,0 +1,5 @@
+# Readonly Substring Dictionary
+
+```csharp
+
+```

@@ -2,6 +2,11 @@
 
 A set of specialized high-performance collections, not available in the framework.
 
+Compatible with Net 3.5+, Standard 2.0+ and Core 2.1+.
+
+As the primary focus of this library is performance, not all functionality will be available on legacy platforms.
+Newer features (like spans) are available thanks to preprocessor directives (use .Net Core if possible).
+
 
 ## Currently available collections
 
@@ -15,11 +20,11 @@ A highly memory-efficient string prefix tree
 
 [`SubstringDictionary<TValue>`](examples/SubstringDictionary.md)
 
-A `<substring, TValue>` dictionary for ordinal lookups on substrings, but without any substring allocations
+A `<substring, TValue>` dictionary for ordinal lookups on substrings, but with 0 substring allocations
 
 #### Readonly Substring Dictionary
 
-[`ReadonlySubstringDictionary<TValue>`](examples/SubstringDictionary.md)
+[`ReadonlySubstringDictionary<TValue>`](examples/ReadonlySubstringDictionary.md)
 
 A readonly variant of `CompactPrefixTree<TValue>` with optimized lookups for substrings with invalid lengths
 

@@ -16,11 +16,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{7752E8DF-E7D
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{C77C06CC-9A5D-481C-8C5A-20D63393BDED}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCollections.Tests", "test\SharpCollections.Tests\SharpCollections.Tests.csproj", "{F569DC50-E0ED-4326-9B1F-F39BD76423BB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpCollections.Tests", "test\SharpCollections.Tests\SharpCollections.Tests.csproj", "{F569DC50-E0ED-4326-9B1F-F39BD76423BB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{BC4EEDC3-A884-48AC-AA3A-6CFC6E19E36B}"
 	ProjectSection(SolutionItems) = preProject
 		examples\CompactPrefixTree.md = examples\CompactPrefixTree.md
+		examples\ReadonlySubstringDictionary.md = examples\ReadonlySubstringDictionary.md
 		examples\SubstringDictionary.md = examples\SubstringDictionary.md
 	EndProjectSection
 EndProject
