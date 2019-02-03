@@ -1,0 +1,53 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.329
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpCollections", "src\SharpCollections\SharpCollections.csproj", "{D00012E1-7395-4AAF-AEA4-C84AC7F610DB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{32C576AE-E151-46F4-911B-54BC72B8E56F}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		license.txt = license.txt
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{7752E8DF-E7D6-4B3B-8619-9F1A02B6D44D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{C77C06CC-9A5D-481C-8C5A-20D63393BDED}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCollections.Tests", "test\SharpCollections.Tests\SharpCollections.Tests.csproj", "{F569DC50-E0ED-4326-9B1F-F39BD76423BB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{BC4EEDC3-A884-48AC-AA3A-6CFC6E19E36B}"
+	ProjectSection(SolutionItems) = preProject
+		examples\CompactPrefixTree.md = examples\CompactPrefixTree.md
+		examples\SubstringDictionary.md = examples\SubstringDictionary.md
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D00012E1-7395-4AAF-AEA4-C84AC7F610DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D00012E1-7395-4AAF-AEA4-C84AC7F610DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D00012E1-7395-4AAF-AEA4-C84AC7F610DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D00012E1-7395-4AAF-AEA4-C84AC7F610DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F569DC50-E0ED-4326-9B1F-F39BD76423BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F569DC50-E0ED-4326-9B1F-F39BD76423BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F569DC50-E0ED-4326-9B1F-F39BD76423BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F569DC50-E0ED-4326-9B1F-F39BD76423BB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{D00012E1-7395-4AAF-AEA4-C84AC7F610DB} = {7752E8DF-E7D6-4B3B-8619-9F1A02B6D44D}
+		{F569DC50-E0ED-4326-9B1F-F39BD76423BB} = {C77C06CC-9A5D-481C-8C5A-20D63393BDED}
+		{BC4EEDC3-A884-48AC-AA3A-6CFC6E19E36B} = {32C576AE-E151-46F4-911B-54BC72B8E56F}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {30945886-9EF4-4E3A-8FE0-643C69B59F3B}
+	EndGlobalSection
+EndGlobal

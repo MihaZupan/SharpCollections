@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net35;netstandard2.0;netcoreapp2.1</TargetFrameworks>
+    <LangVersion>7.3</LangVersion>
+    <AssemblyName>SharpCollections</AssemblyName>
+	<PackageLicenseExpression>BSD-2-Clause</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>1.0.0</Version>
+    <Authors>Miha Zupan</Authors>
+    <Company>Miha Zupan</Company>
+    <Description>A set of specialized high-performance collections, not available in the framework</Description>
+    <Copyright>Miha Zupan</Copyright>
+    <Product>SharpCollections</Product>
+    <PackageId>SharpCollections</PackageId>
+    <PackageProjectUrl>https://github.com/MihaZupan/SharpCollections</PackageProjectUrl>
+    <NeutralLanguage>en</NeutralLanguage>
+    <PackageTags>collection performance tree</PackageTags>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(TargetFramework)', '^netcoreapp\d'))">
+    <DefineConstants>NETCORE</DefineConstants>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="$(TargetFramework)=='net35'">
+    <DefineConstants>LEGACY</DefineConstants>
+  </PropertyGroup>
+</Project>
