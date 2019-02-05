@@ -41,4 +41,10 @@ Console.WriteLine(tree["world"]);
 // Or add them explicitly
 tree.Add("Foo", 1); // Will throw if already present
 tree.TryAdd("Bar", 2); // Will return false if already present
+
+// You can access key/value pairs by index
+match = tree[3]; // Hello world!, 4
+
+// Only downside of this data structure is not being able to remove elements
+// tree.Remove("key");
 ```
