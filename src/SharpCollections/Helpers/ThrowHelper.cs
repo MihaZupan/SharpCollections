@@ -29,6 +29,11 @@ namespace SharpCollections
             throw new ArgumentOutOfRangeException(GetArgumentName(argument), GetExceptionReason(reason));
         }
 
+        public static void ThrowIndexOutOfRangeException()
+        {
+            throw new IndexOutOfRangeException();
+        }
+
         private static string GetArgumentName(ExceptionArgument argument)
         {
             switch (argument)
@@ -64,9 +69,6 @@ namespace SharpCollections
                 case ExceptionReason.DuplicateKey:
                     return "The given key is already present in the dictionary.";
 
-                case ExceptionReason.NegativeLength:
-                    return "Length must be a positive integer.";
-
                 default:
                     Debug.Fail("The enum value is not defined, please check the ExceptionReason Enum.");
                     return "";
@@ -81,7 +83,7 @@ namespace SharpCollections
         value,
         length,
         offsetLength,
-        text,
+        text
     }
 
     internal enum ExceptionReason
@@ -90,6 +92,5 @@ namespace SharpCollections
         SmallCapacity,
         InvalidOffsetLength,
         DuplicateKey,
-        NegativeLength,
     }
 }

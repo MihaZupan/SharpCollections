@@ -20,26 +20,44 @@ namespace SharpCollections.Generic
 #endif
     {
         [DebuggerDisplay("{Char}, Child: {ChildChar} at {ChildIndex}, Match: {MatchIndex}, Children: {Children?.Count ?? 0}")]
-        private struct Node
+        private struct Node // 4 bytes of padding on x64, possible room for a Length field if needed later
         {
+            /// <summary>
+            /// The character this node represents, should never be 0
+            /// </summary>
             public char Char;
+            /// <summary>
+            /// Will be 0 if this is a leaf node
+            /// </summary>
             public char ChildChar;
             public int ChildIndex;
+            /// <summary>
+            /// Set to -1 if it does not point to a match
+            /// </summary>
             public int MatchIndex;
+            /// <summary>
+            /// May be null if the only has one child
+            /// </summary>
             public List<int> Children;
         }
 
         private Node[] _tree;
-        private KeyValuePair<string, TValue>[] _matches;
+        private static readonly Node[] _emptyTree = new Node[0];
 
-#region Size and Capacity
+        private KeyValuePair<string, TValue>[] _matches;
+        private static readonly KeyValuePair<string, TValue>[] _emptyMatches = new KeyValuePair<string, TValue>[0];
+
+        #region Size and Capacity
 
         /// <summary>
         /// Gets the number of nodes in the internal tree structure
+        /// <para>You might be looking for <see cref="Count"/></para>
+        /// <para>Exposing this might help in deducing more efficient initial parameters</para>
         /// </summary>
         public int TreeSize { get; private set; }
         /// <summary>
         /// Gets or sets the capacity of the internal tree structure buffer
+        /// <para>You might be looking for <see cref="Capacity"/></para>
         /// </summary>
         public int TreeCapacity
         {
@@ -68,7 +86,7 @@ namespace SharpCollections.Generic
             // Expansion logic as in System.Collections.Generic.List<T>
             if (_tree.Length < min)
             {
-                int newCapacity = _tree.Length << 1;
+                int newCapacity = _tree.Length * 2;
                 if ((uint)min > int.MaxValue) newCapacity = int.MaxValue;
                 if (newCapacity < min) newCapacity = min;
                 TreeCapacity = newCapacity;
@@ -110,7 +128,7 @@ namespace SharpCollections.Generic
             // Expansion logic as in System.Collections.Generic.List<T>
             if (_matches.Length < min)
             {
-                int newCapacity = _matches.Length << 1;
+                int newCapacity = _matches.Length * 2;
                 if ((uint)min > int.MaxValue) newCapacity = int.MaxValue;
                 if (newCapacity < min) newCapacity = min;
                 Capacity = newCapacity;
@@ -118,9 +136,9 @@ namespace SharpCollections.Generic
             Debug.Assert(_matches.Length >= min);
         }
 
-#endregion Size and Capacity
+        #endregion Size and Capacity
 
-#region RootChar
+        #region RootChar
 
         [MethodImpl(256)] // MethodImplOptions.AggressiveInlining
         private bool TryGetRoot(char rootChar, out int rootNodeIndex)
@@ -158,27 +176,33 @@ namespace SharpCollections.Generic
         private readonly int[] _asciiRootMap = new int[128];
         private Dictionary<char, int> _unicodeRootMap;
 
-#endregion RootChar
+        #endregion RootChar
+
+        private void Init(int matchCapacity, int treeCapacity)
+        {
+            for (int i = 0; i < _asciiRootMap.Length; i++)
+                _asciiRootMap[i] = -1;
+
+            _matches = matchCapacity == 0 ? _emptyMatches : new KeyValuePair<string, TValue>[matchCapacity];
+            _tree = treeCapacity == 0 ? _emptyTree : new Node[treeCapacity];
+        }
 
         /// <summary>
         /// Constructs a new <see cref="CompactPrefixTree{TValue}"/> with no initial prefixes
         /// </summary>
         public CompactPrefixTree(int matchCapacity = 0, int treeCapacity = 0)
         {
-            for (int i = 0; i < _asciiRootMap.Length; i++)
-                _asciiRootMap[i] = -1;
-
-            _matches = new KeyValuePair<string, TValue>[matchCapacity];
-            _tree = new Node[treeCapacity];
+            Init(matchCapacity, treeCapacity);
         }
         /// <summary>
         /// Constructs a new <see cref="CompactPrefixTree{TValue}"/> with the supplied matches
         /// </summary>
         /// <param name="input">Matches to initialize the <see cref="CompactPrefixTree{TValue}"/> with. For best lookup performance, this collection should be sorted.</param>
         public CompactPrefixTree(ICollection<KeyValuePair<string, TValue>> input)
-            : this(matchCapacity: input.Count, treeCapacity: (int)(input.Count * 1.7f))
         {
             if (input == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.input);
+
+            Init(input.Count, input.Count < 32 ? input.Count * 2 : (int)(input.Count * 1.7f));
 
             using (var e = input.GetEnumerator())
             {
@@ -190,6 +214,8 @@ namespace SharpCollections.Generic
             }
         }
 
+        #region this[] accessors
+
         /// <summary>
         /// Retrieves the key/value pair at the specified index (must be lower than <see cref="Count"/>)
         /// </summary>
@@ -198,7 +224,11 @@ namespace SharpCollections.Generic
         public KeyValuePair<string, TValue> this[int index]
         {
             [MethodImpl(256)] // MethodImplOptions.AggressiveInlining
-            get => _matches[index];
+            get
+            {
+                if (index >= Count) ThrowHelper.ThrowIndexOutOfRangeException();
+                return _matches[index];
+            }
         }
 
         /// <summary>
@@ -210,7 +240,7 @@ namespace SharpCollections.Generic
         {
             get
             {
-                if (TryMatch(key, out KeyValuePair<string, TValue> match))
+                if (TryMatchExact(key, out KeyValuePair<string, TValue> match))
                     return match.Value;
                 throw new KeyNotFoundException(key);
             }
@@ -221,6 +251,7 @@ namespace SharpCollections.Generic
                 Debug.Assert(modified);
             }
         } // Get, Set
+
 #if NETCORE
         /// <summary>
         /// Gets the value associated with the specified key
@@ -231,12 +262,16 @@ namespace SharpCollections.Generic
         {
             get
             {
-                if (TryMatch(key, out KeyValuePair<string, TValue> match))
+                if (TryMatchExact(key, out KeyValuePair<string, TValue> match))
                     return match;
                 throw new KeyNotFoundException(key.ToString());
             }
         } // Get only
 #endif
+
+        #endregion this[] accessors
+
+        #region Add, TryAdd
 
         /// <summary>
         /// Adds the specified key/value pair to the <see cref="CompactPrefixTree{TValue}"/>
@@ -274,11 +309,16 @@ namespace SharpCollections.Generic
         public bool TryAdd(KeyValuePair<string, TValue> pair)
             => TryInsert(in pair, InsertionBehavior.None);
 
+        #endregion Add, TryAdd
+
+        #region Insert internal
+
         private bool TryInsert(in KeyValuePair<string, TValue> pair, InsertionBehavior behavior)
         {
             string key = pair.Key;
             if (key == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.key);
             if (key.Length == 0) ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.key, ExceptionReason.String_Empty);
+            Debug.Assert(!string.IsNullOrEmpty(key));
 
             if (TryGetRoot(key[0], out int rootNodeIndex))
             {
@@ -290,7 +330,7 @@ namespace SharpCollections.Generic
                     if (node.ChildChar == c)
                     {
                         node = ref _tree[node.ChildIndex];
-                        goto NextChar;
+                        continue;
                     }
 
                     if (node.Children == null)
@@ -525,40 +565,61 @@ namespace SharpCollections.Generic
             TreeSize++;
         }
 
-        /// <summary>
-        /// Tries to find the longest prefix of text, that is contained in this <see cref="CompactPrefixTree{TValue}"/>
-        /// </summary>
-        /// <param name="text">The text in which to search for the longest prefix</param>
-        /// <param name="match">The longest found prefix in the specified text and the corresponding value</param>
-        /// <returns>True if a match was found, false otherwise</returns>
-        public bool TryMatch(string text, out KeyValuePair<string, TValue> match)
-        {
-#if NETCORE
-            return TryMatch(text.AsSpan(), out match);
-#else
-            return TryMatch(text, 0, text.Length, out match);
-#endif
-        }
+        #endregion Insert internal
 
-#if NETCORE
+        #region TryMatch longest
+
         /// <summary>
         /// Tries to find the longest prefix of text, starting at offset, that is contained in this <see cref="CompactPrefixTree{TValue}"/>
         /// </summary>
-        /// <param name="text">The text in which to search for the longest prefix</param>
-        /// <param name="offset">The offset in text at which to start looking for the prefix</param>
-        /// <param name="length">The longest prefix allowed to match</param>
-        /// <param name="match">The longest found prefix in the specified text and the corresponding value</param>
+        /// <param name="text">The text in which to search for the prefix</param>
+        /// <param name="offset">Index of the character at which to start searching</param>
+        /// <param name="match">The found prefix and the corresponding value</param>
         /// <returns>True if a match was found, false otherwise</returns>
-        public bool TryMatch(string text, int offset, int length, out KeyValuePair<string, TValue> match)
-            => TryMatch(text.AsSpan(offset, length), out match);
+        public bool TryMatchLongest(string text, int offset, out KeyValuePair<string, TValue> match)
+        {
+#if NETCORE
+            return TryMatchLongest(text.AsSpan(offset), out match);
+#else
+            return TryMatchLongest(text, offset, text.Length - offset, out match);
+#endif
+        }
 
         /// <summary>
         /// Tries to find the longest prefix of text, that is contained in this <see cref="CompactPrefixTree{TValue}"/>
         /// </summary>
-        /// <param name="text">The text in which to search for the longest prefix</param>
-        /// <param name="match">The longest found prefix in the specified text and the corresponding value</param>
+        /// <param name="text">The text in which to search for the prefix</param>
+        /// <param name="match">The found prefix and the corresponding value</param>
         /// <returns>True if a match was found, false otherwise</returns>
-        public bool TryMatch(ReadOnlySpan<char> text, out KeyValuePair<string, TValue> match)
+        public bool TryMatchLongest(string text, out KeyValuePair<string, TValue> match)
+        {
+            if (text == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.text);
+#if NETCORE
+            return TryMatchLongest(text.AsSpan(), out match);
+#else
+            return TryMatchLongest(text, 0, text.Length, out match);
+#endif
+        }
+
+        /// <summary>
+        /// Tries to find the longest prefix of text, starting at offset, that is contained in this <see cref="CompactPrefixTree{TValue}"/>
+        /// </summary>
+        /// <param name="text">The text in which to search for the prefix</param>
+        /// <param name="offset">The offset in text at which to start looking for the prefix</param>
+        /// <param name="length">The longest prefix allowed to match</param>
+        /// <param name="match">The found prefix and the corresponding value</param>
+        /// <returns>True if a match was found, false otherwise</returns>
+#if NETCORE
+        public bool TryMatchLongest(string text, int offset, int length, out KeyValuePair<string, TValue> match)
+            => TryMatchLongest(text.AsSpan(offset, length), out match);
+
+        /// <summary>
+        /// Tries to find the longest prefix of text, that is contained in this <see cref="CompactPrefixTree{TValue}"/>
+        /// </summary>
+        /// <param name="text">The text in which to search for the prefix</param>
+        /// <param name="match">The found prefix and the corresponding value</param>
+        /// <returns>True if a match was found, false otherwise</returns>
+        public bool TryMatchLongest(ReadOnlySpan<char> text, out KeyValuePair<string, TValue> match)
         {
             if (text.Length == 0)
                 ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.key, ExceptionReason.String_Empty);
@@ -567,7 +628,7 @@ namespace SharpCollections.Generic
             if (!TryGetRoot(text[0], out int nodeIndex))
                 return false;
 #else
-        public bool TryMatch(string text, int offset, int length, out KeyValuePair<string, TValue> match)
+        public bool TryMatchLongest(string text, int offset, int length, out KeyValuePair<string, TValue> match)
         {
             int limit = offset + length;
             if (text == null)
@@ -656,6 +717,280 @@ namespace SharpCollections.Generic
             return false;
         }
 
+        #endregion TryMatch longest
+
+        #region TryMatch exact
+
+        /// <summary>
+        /// Tries to find a suffix of text, starting at offset, that is contained in this <see cref="CompactPrefixTree{TValue}"/> and is exactly (text.Length - offset) characters long
+        /// </summary>
+        /// <param name="text">The text in which to search for the prefix</param>
+        /// <param name="offset">Index of the character at which to start searching</param>
+        /// <param name="match">The found prefix and the corresponding value</param>
+        /// <returns>True if a match was found, false otherwise</returns>
+        public bool TryMatchExact(string text, int offset, out KeyValuePair<string, TValue> match)
+        {
+#if NETCORE
+            return TryMatchExact(text.AsSpan(offset), out match);
+#else
+            return TryMatchExact(text, offset, text.Length - offset, out match);
+#endif
+        }
+
+        /// <summary>
+        /// Tries to find a prefix of text, that is contained in this <see cref="CompactPrefixTree{TValue}"/> and is exactly text.Length characters long
+        /// </summary>
+        /// <param name="text">The text in which to search for the prefix</param>
+        /// <param name="match">The found prefix and the corresponding value</param>
+        /// <returns>True if a match was found, false otherwise</returns>
+        public bool TryMatchExact(string text, out KeyValuePair<string, TValue> match)
+        {
+            if (text == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.text);
+#if NETCORE
+            return TryMatchExact(text.AsSpan(), out match);
+#else
+            return TryMatchExact(text, 0, text.Length, out match);
+#endif
+        }
+
+        /// <summary>
+        /// Tries to find a prefix of text, starting at offset, that is contained in this <see cref="CompactPrefixTree{TValue}"/> and is exactly length characters long
+        /// </summary>
+        /// <param name="text">The text in which to search for the prefix</param>
+        /// <param name="offset">The offset in text at which to start looking for the prefix</param>
+        /// <param name="length">The longest prefix allowed to match</param>
+        /// <param name="match">The found prefix and the corresponding value</param>
+        /// <returns>True if a match was found, false otherwise</returns>
+#if NETCORE
+        public bool TryMatchExact(string text, int offset, int length, out KeyValuePair<string, TValue> match)
+            => TryMatchExact(text.AsSpan(offset, length), out match);
+
+        /// <summary>
+        /// Tries to find a prefix of text, that is contained in this <see cref="CompactPrefixTree{TValue}"/> and is exactly text.Length characters long
+        /// </summary>
+        /// <param name="text">The text in which to search for the prefix</param>
+        /// <param name="match">The found prefix and the corresponding value</param>
+        /// <returns>True if a match was found, false otherwise</returns>
+        public bool TryMatchExact(ReadOnlySpan<char> text, out KeyValuePair<string, TValue> match)
+        {
+            if (text.Length == 0)
+                ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.key, ExceptionReason.String_Empty);
+
+            match = default;
+            if (!TryGetRoot(text[0], out int nodeIndex))
+                return false;
+#else
+        public bool TryMatchExact(string text, int offset, int length, out KeyValuePair<string, TValue> match)
+        {
+            int limit = offset + length;
+            if (text == null)
+                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.key);
+
+            if (offset < 0 || length < 0 || text.Length < limit)
+                ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.offsetLength, ExceptionReason.InvalidOffsetLength);
+
+            if (length == 0)
+                ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.length, ExceptionReason.String_Empty);
+
+            match = default;
+            if (!TryGetRoot(text[offset], out int nodeIndex))
+                return false;
+#endif
+            int depth = 1;
+
+            ref Node node = ref _tree[nodeIndex];
+            if (node.ChildChar == 0) goto LeafNodeFound;
+#if NETCORE
+            if (node.MatchIndex != -1 && text.Length == 1)
+#else
+            if (node.MatchIndex != -1 && length == 1)
+#endif
+            {
+                match = _matches[node.MatchIndex];
+                return true;
+            }
+
+#if NETCORE
+            for (int i = 1; i < text.Length; i++)
+#else
+            for (int i = offset + 1; i < limit; i++)
+#endif
+            {
+                char c = text[i];
+
+                if (node.ChildChar == c)
+                {
+                    node = ref _tree[node.ChildIndex];
+                    goto NextChar;
+                }
+
+                // Keep a reference to the current node's children since we're re-assigning the node reference
+                List<int> children = node.Children;
+                if (children == null) return false;
+                for (int j = 0; j < children.Count; j++)
+                {
+                    node = ref _tree[children[j]];
+                    if (node.Char == c) goto NextChar;
+                }
+                return false;
+
+            NextChar:;
+                depth++;
+                if (node.ChildChar == 0) goto LeafNodeFound;
+            }
+
+            if (node.MatchIndex == -1) return false;
+            match = _matches[node.MatchIndex];
+#if NETCORE
+            Debug.Assert(match.Key.Length == text.Length);
+#else
+            Debug.Assert(match.Key.Length == length);
+#endif
+            return true;
+
+        LeafNodeFound:;
+            match = _matches[node.MatchIndex];
+#if NETCORE
+            return match.Key.Length == text.Length &&
+                text.Slice(depth).Equals(match.Key.AsSpan(depth), StringComparison.Ordinal);
+#else
+            if (match.Key.Length == length)
+            {
+                // Check that the rest of the strings match
+                for (int i = offset + depth, j = depth; j < match.Key.Length; i++, j++)
+                {
+                    if (text[i] != match.Key[j])
+                        return false;
+                }
+                return true;
+            }
+            return false;
+#endif
+        }
+
+        #endregion TryMatch exact
+
+        #region TryMatch shortest
+
+        /// <summary>
+        /// Tries to find the shortest prefix of text, starting at offset, that is contained in this <see cref="CompactPrefixTree{TValue}"/>
+        /// </summary>
+        /// <param name="text">The text in which to search for the prefix</param>
+        /// <param name="offset">Index of the character at which to start searching</param>
+        /// <param name="match">The found prefix and the corresponding value</param>
+        /// <returns>True if a match was found, false otherwise</returns>
+        public bool TryMatchShortest(string text, int offset, out KeyValuePair<string, TValue> match)
+        {
+#if NETCORE
+            return TryMatchShortest(text.AsSpan(offset), out match);
+#else
+            return TryMatchShortest(text, offset, text.Length - offset, out match);
+#endif
+        }
+
+        /// <summary>
+        /// Tries to find the shortest prefix of text, that is contained in this <see cref="CompactPrefixTree{TValue}"/>
+        /// </summary>
+        /// <param name="text">The text in which to search for the prefix</param>
+        /// <param name="match">The found prefix and the corresponding value</param>
+        /// <returns>True if a match was found, false otherwise</returns>
+        public bool TryMatchShortest(string text, out KeyValuePair<string, TValue> match)
+        {
+            if (text == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.text);
+#if NETCORE
+            return TryMatchShortest(text.AsSpan(), out match);
+#else
+            return TryMatchShortest(text, 0, text.Length, out match);
+#endif
+        }
+
+        /// <summary>
+        /// Tries to find the shortest prefix of text, starting at offset, that is contained in this <see cref="CompactPrefixTree{TValue}"/>
+        /// </summary>
+        /// <param name="text">The text in which to search for the prefix</param>
+        /// <param name="offset">The offset in text at which to start looking for the prefix</param>
+        /// <param name="length">The longest prefix allowed to match</param>
+        /// <param name="match">The found prefix and the corresponding value</param>
+        /// <returns>True if a match was found, false otherwise</returns>
+#if NETCORE
+        public bool TryMatchShortest(string text, int offset, int length, out KeyValuePair<string, TValue> match)
+            => TryMatchShortest(text.AsSpan(offset, length), out match);
+
+        /// <summary>
+        /// Tries to find the shortest prefix of text, that is contained in this <see cref="CompactPrefixTree{TValue}"/>
+        /// </summary>
+        /// <param name="text">The text in which to search for the prefix</param>
+        /// <param name="match">The found prefix and the corresponding value</param>
+        /// <returns>True if a match was found, false otherwise</returns>
+        public bool TryMatchShortest(ReadOnlySpan<char> text, out KeyValuePair<string, TValue> match)
+        {
+            if (text.Length == 0)
+                ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.key, ExceptionReason.String_Empty);
+
+            match = default;
+            if (!TryGetRoot(text[0], out int nodeIndex))
+                return false;
+#else
+        public bool TryMatchShortest(string text, int offset, int length, out KeyValuePair<string, TValue> match)
+        {
+            int limit = offset + length;
+            if (text == null)
+                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.key);
+
+            if (offset < 0 || length < 0 || text.Length < limit)
+                ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.offsetLength, ExceptionReason.InvalidOffsetLength);
+
+            if (length == 0)
+                ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.length, ExceptionReason.String_Empty);
+
+            match = default;
+            if (!TryGetRoot(text[offset], out int nodeIndex))
+                return false;
+#endif
+            ref Node node = ref _tree[nodeIndex];
+            if (node.MatchIndex != -1)
+            {
+                match = _matches[node.MatchIndex];
+                return true;
+            }
+
+#if NETCORE
+            for (int i = 1; i < text.Length; i++)
+#else
+            for (int i = offset + 1; i < limit; i++)
+#endif
+            {
+                char c = text[i];
+
+                if (node.ChildChar == c)
+                {
+                    node = ref _tree[node.ChildIndex];
+                    goto NextChar;
+                }
+
+                // Keep a reference to the current node's children since we're re-assigning the node reference
+                List<int> children = node.Children;
+                Debug.Assert(children != null);
+                for (int j = 0; j < children.Count; j++)
+                {
+                    node = ref _tree[children[j]];
+                    if (node.Char == c) goto NextChar;
+                }
+                return false;
+
+            NextChar:;
+                if (node.MatchIndex != -1)
+                {
+                    match = _matches[node.MatchIndex];
+                    return true;
+                }
+            }
+            Debug.Assert(node.MatchIndex == -1);
+            return false;
+        }
+
+#endregion TryMatch shortest
+
 #region Interface implementations
 
         /// <summary>
@@ -664,7 +999,7 @@ namespace SharpCollections.Generic
         /// <param name="key">The key to locate in this <see cref="CompactPrefixTree{TValue}"/></param>
         /// <returns>True if the key is contained in this PrefixTree, false otherwise.</returns>
         public bool ContainsKey(string key)
-            => TryMatch(key, out _);
+            => TryMatchExact(key, out _);
 
         /// <summary>
         /// Gets the value associated with the specified key
@@ -674,7 +1009,7 @@ namespace SharpCollections.Generic
         /// <returns>True if the key is contained in this PrefixTree, false otherwise.</returns>
         public bool TryGetValue(string key, out TValue value)
         {
-            bool ret = TryMatch(key, out KeyValuePair<string, TValue> match);
+            bool ret = TryMatchExact(key, out KeyValuePair<string, TValue> match);
             value = match.Value;
             return ret;
         }
@@ -687,7 +1022,7 @@ namespace SharpCollections.Generic
             get
             {
                 for (int i = 0; i < Count; i++)
-                    yield return _matches[Count].Key;
+                    yield return _matches[i].Key;
             }
         }
         /// <summary>
@@ -707,9 +1042,9 @@ namespace SharpCollections.Generic
         /// <para>Use the index accessor instead (<see cref="this[int]"/>)</para>
         /// </summary>
         /// <returns></returns>
-        public IEnumerator<KeyValuePair<string, TValue>> GetEnumerator() => new Enumerator();
+        public IEnumerator<KeyValuePair<string, TValue>> GetEnumerator() => new Enumerator(_matches);
 #if !LEGACY
-        IEnumerator IEnumerable.GetEnumerator() => new Enumerator();
+        IEnumerator IEnumerable.GetEnumerator() => new Enumerator(_matches);
 #endif
 
         /// <summary>

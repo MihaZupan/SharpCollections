@@ -1,13 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.329
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28527.54
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpCollections", "src\SharpCollections\SharpCollections.csproj", "{D00012E1-7395-4AAF-AEA4-C84AC7F610DB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{32C576AE-E151-46F4-911B-54BC72B8E56F}"
 	ProjectSection(SolutionItems) = preProject
+		.appveyor.yml = .appveyor.yml
 		.gitignore = .gitignore
+		.travis.yml = .travis.yml
 		license.txt = license.txt
 		README.md = README.md
 	EndProjectSection
@@ -21,8 +23,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{BC4EEDC3-A884-48AC-AA3A-6CFC6E19E36B}"
 	ProjectSection(SolutionItems) = preProject
 		examples\CompactPrefixTree.md = examples\CompactPrefixTree.md
-		examples\ReadonlySubstringDictionary.md = examples\ReadonlySubstringDictionary.md
-		examples\SubstringDictionary.md = examples\SubstringDictionary.md
 	EndProjectSection
 EndProject
 Global
