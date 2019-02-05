@@ -25,6 +25,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{BC
 		examples\CompactPrefixTree.md = examples\CompactPrefixTree.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmark", "test\Benchmark\Benchmark.csproj", "{0D044410-9A38-4FA3-A6D1-AFE14450D27C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{F569DC50-E0ED-4326-9B1F-F39BD76423BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F569DC50-E0ED-4326-9B1F-F39BD76423BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F569DC50-E0ED-4326-9B1F-F39BD76423BB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D044410-9A38-4FA3-A6D1-AFE14450D27C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D044410-9A38-4FA3-A6D1-AFE14450D27C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D044410-9A38-4FA3-A6D1-AFE14450D27C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D044410-9A38-4FA3-A6D1-AFE14450D27C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -47,6 +53,7 @@ Global
 		{D00012E1-7395-4AAF-AEA4-C84AC7F610DB} = {7752E8DF-E7D6-4B3B-8619-9F1A02B6D44D}
 		{F569DC50-E0ED-4326-9B1F-F39BD76423BB} = {C77C06CC-9A5D-481C-8C5A-20D63393BDED}
 		{BC4EEDC3-A884-48AC-AA3A-6CFC6E19E36B} = {32C576AE-E151-46F4-911B-54BC72B8E56F}
+		{0D044410-9A38-4FA3-A6D1-AFE14450D27C} = {C77C06CC-9A5D-481C-8C5A-20D63393BDED}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {30945886-9EF4-4E3A-8FE0-643C69B59F3B}
