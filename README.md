@@ -1,5 +1,9 @@
 # Sharp Collections
 
+[![Build Status](https://travis-ci.org/MihaZupan/SharpCollections.svg?branch=master)](https://travis-ci.org/MihaZupan/SharpCollections)
+[![Build status](https://ci.appveyor.com/api/projects/status/uwno7633b39ikdvn/branch/master?svg=true)](https://ci.appveyor.com/project/MihaZupan/sharpcollections/branch/master)
+[![Coverage Status](https://coveralls.io/repos/github/MihaZupan/SharpCollections/badge.svg?branch=master)](https://coveralls.io/github/MihaZupan/SharpCollections?branch=master)
+
 A set of specialized high-performance collections, not available in the framework.
 
 Compatible with Framework 3.5+, Standard 2.0+ and Core 2.1+.
