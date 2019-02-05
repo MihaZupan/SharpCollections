@@ -1,0 +1,26 @@
+version: '{build}'
+max_jobs: 1
+
+branches:
+  only:
+    - master
+
+image: Visual Studio 2017
+configuration: Release
+
+install:
+  - dotnet tool install -g coveralls.net --version 1.0.0
+
+before_build:
+  - nuget restore -verbosity quiet
+
+build:
+  project: SharpCollections.sln
+  verbosity: minimal
+
+test_script:
+  - cd test/SharpCollections.Tests
+  - dotnet test -c Release --no-build && dotnet test -c Release -f netcoreapp2.1 /p:CollectCoverage=true /p:Include=\"[SharpCollections*]*\" /p:CoverletOutputFormat=opencover /p:CoverletOutput=../../coverage.xml
+ 
+after_test:
+  - csmacnz.Coveralls --opencover -i ./coverage.xml --useRelativePaths
