@@ -6,7 +6,7 @@
     <PackageLicenseExpression>BSD-2-Clause</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.0</Version>
+    <Version>0.1.0</Version>
     <Authors>Miha Zupan</Authors>
     <Company>Miha Zupan</Company>
     <Description>A set of specialized high-performance collections, not available in the framework</Description>
@@ -15,7 +15,7 @@
     <PackageId>SharpCollections</PackageId>
     <PackageProjectUrl>https://github.com/MihaZupan/SharpCollections</PackageProjectUrl>
     <NeutralLanguage>en</NeutralLanguage>
-    <PackageTags>collection performance tree</PackageTags>
+    <PackageTags>collection performance tree prefixtree</PackageTags>
     <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   

@@ -1,8 +1,4 @@
-# Sharp Collections
-
-[![Build Status](https://travis-ci.org/MihaZupan/SharpCollections.svg?branch=master)](https://travis-ci.org/MihaZupan/SharpCollections)
-[![Build status](https://ci.appveyor.com/api/projects/status/uwno7633b39ikdvn/branch/master?svg=true)](https://ci.appveyor.com/project/MihaZupan/sharpcollections/branch/master)
-[![Coverage Status](https://coveralls.io/repos/github/MihaZupan/SharpCollections/badge.svg?branch=master)](https://coveralls.io/github/MihaZupan/SharpCollections?branch=master)
+# Sharp Collections [![Build Status](https://travis-ci.org/MihaZupan/SharpCollections.svg?branch=master)](https://travis-ci.org/MihaZupan/SharpCollections) [![Build status](https://ci.appveyor.com/api/projects/status/uwno7633b39ikdvn/branch/master?svg=true)](https://ci.appveyor.com/project/MihaZupan/sharpcollections/branch/master) [![Coverage Status](https://coveralls.io/repos/github/MihaZupan/SharpCollections/badge.svg?branch=master)](https://coveralls.io/github/MihaZupan/SharpCollections?branch=master) [![NuGet](https://img.shields.io/nuget/v/SharpCollections.svg)](https://www.nuget.org/packages/SharpCollections/) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)][PayPalMe]
 
 A set of specialized high-performance collections, not available in the framework.
 
@@ -23,7 +19,14 @@ A highly memory-efficient string prefix tree.
 
 ## License
 
-This library is released under the [BSD-Clause 2 license][license]
+This library is released under the [BSD-Clause 2 license][license].
+
+TL;DR: Use however you want as long as you give attribution
+
+## Donate
+
+If you find yourself using this library, please consider donating!
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)][PayPalMe]
 
 ## Author
 
@@ -31,3 +34,4 @@ This library is released under the [BSD-Clause 2 license][license]
 
 
 [License]: https://raw.githubusercontent.com/MihaZupan/SharpCollections/master/license.txt
+[PayPalMe]: https://www.paypal.me/MihaZupanSLO
