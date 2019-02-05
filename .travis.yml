@@ -6,9 +6,9 @@ mono: none
 dotnet: 2.1.403
 
 script: >
-  dotnet build -c Release &&
-  dotnet test test/SharpCollections.Tests -c Release --no-build --list-tests &&
-  dotnet test test/SharpCollections.Tests -c Release --no-build
+  dotnet build -f netcoreapp2.1 -c Release &&
+  dotnet test test/SharpCollections.Tests -f netcoreapp2.1 -c Release --no-build --list-tests &&
+  dotnet test test/SharpCollections.Tests -f netcoreapp2.1 -c Release --no-build
 
 notifications:
   email: false
