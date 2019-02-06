@@ -202,7 +202,7 @@ namespace SharpCollections.Generic
         {
             if (input == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.input);
 
-            Init(input.Count, input.Count < 32 ? input.Count * 2 : (int)(input.Count * 1.7f));
+            Init(input.Count, input.Count * 2);
 
             using (var e = input.GetEnumerator())
             {
@@ -621,27 +621,21 @@ namespace SharpCollections.Generic
         /// <returns>True if a match was found, false otherwise</returns>
         public bool TryMatchLongest(ReadOnlySpan<char> text, out KeyValuePair<string, TValue> match)
         {
-            if (text.Length == 0)
-                ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.key, ExceptionReason.String_Empty);
-
             match = default;
-            if (!TryGetRoot(text[0], out int nodeIndex))
+            if (text.Length == 0 || !TryGetRoot(text[0], out int nodeIndex))
                 return false;
 #else
         public bool TryMatchLongest(string text, int offset, int length, out KeyValuePair<string, TValue> match)
         {
             int limit = offset + length;
             if (text == null)
-                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.key);
+                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.text);
 
             if (offset < 0 || length < 0 || text.Length < limit)
                 ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.offsetLength, ExceptionReason.InvalidOffsetLength);
 
-            if (length == 0)
-                ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.length, ExceptionReason.String_Empty);
-
             match = default;
-            if (!TryGetRoot(text[offset], out int nodeIndex))
+            if (length == 0 || !TryGetRoot(text[offset], out int nodeIndex))
                 return false;
 #endif
 
@@ -773,27 +767,21 @@ namespace SharpCollections.Generic
         /// <returns>True if a match was found, false otherwise</returns>
         public bool TryMatchExact(ReadOnlySpan<char> text, out KeyValuePair<string, TValue> match)
         {
-            if (text.Length == 0)
-                ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.key, ExceptionReason.String_Empty);
-
             match = default;
-            if (!TryGetRoot(text[0], out int nodeIndex))
+            if (text.Length == 0 || !TryGetRoot(text[0], out int nodeIndex))
                 return false;
 #else
         public bool TryMatchExact(string text, int offset, int length, out KeyValuePair<string, TValue> match)
         {
             int limit = offset + length;
             if (text == null)
-                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.key);
+                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.text);
 
             if (offset < 0 || length < 0 || text.Length < limit)
                 ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.offsetLength, ExceptionReason.InvalidOffsetLength);
 
-            if (length == 0)
-                ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.length, ExceptionReason.String_Empty);
-
             match = default;
-            if (!TryGetRoot(text[offset], out int nodeIndex))
+            if (length == 0 || !TryGetRoot(text[offset], out int nodeIndex))
                 return false;
 #endif
             int depth = 1;
@@ -924,27 +912,21 @@ namespace SharpCollections.Generic
         /// <returns>True if a match was found, false otherwise</returns>
         public bool TryMatchShortest(ReadOnlySpan<char> text, out KeyValuePair<string, TValue> match)
         {
-            if (text.Length == 0)
-                ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.key, ExceptionReason.String_Empty);
-
             match = default;
-            if (!TryGetRoot(text[0], out int nodeIndex))
+            if (text.Length == 0 || !TryGetRoot(text[0], out int nodeIndex))
                 return false;
 #else
         public bool TryMatchShortest(string text, int offset, int length, out KeyValuePair<string, TValue> match)
         {
             int limit = offset + length;
             if (text == null)
-                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.key);
+                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.text);
 
             if (offset < 0 || length < 0 || text.Length < limit)
                 ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.offsetLength, ExceptionReason.InvalidOffsetLength);
 
-            if (length == 0)
-                ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.length, ExceptionReason.String_Empty);
-
             match = default;
-            if (!TryGetRoot(text[offset], out int nodeIndex))
+            if (length == 0 || !TryGetRoot(text[offset], out int nodeIndex))
                 return false;
 #endif
             ref Node node = ref _tree[nodeIndex];

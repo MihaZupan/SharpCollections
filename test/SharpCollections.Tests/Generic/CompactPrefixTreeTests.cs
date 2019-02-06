@@ -69,14 +69,8 @@ namespace SharpCollections.Generic
             Assert.Throws<ArgumentNullException>(() => { tree.ContainsKey(null); });
 
             Assert.Throws<ArgumentOutOfRangeException>(() => { tree[""] = 123; });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { int num = tree[""]; });
             Assert.Throws<ArgumentOutOfRangeException>(() => { tree.Add("", 123); });
             Assert.Throws<ArgumentOutOfRangeException>(() => { tree.TryAdd("", 123); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { tree.TryMatchShortest("", out _); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { tree.TryMatchExact("", out _); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { tree.TryMatchLongest("", out _); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { tree.TryGetValue("", out _); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { tree.ContainsKey(""); });
 
             Assert.Throws<ArgumentOutOfRangeException>(() => { tree.TryMatchShortest("Foo", -1, 0, out _); });
             Assert.Throws<ArgumentOutOfRangeException>(() => { tree.TryMatchShortest("Foo", 0, -1, out _); });

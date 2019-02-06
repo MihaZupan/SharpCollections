@@ -1,5 +1,0 @@
-# Substring Dictionary
-
-```csharp
-
-```
