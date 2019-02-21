@@ -20,7 +20,7 @@ namespace SharpCollections.Generic
         : IReadOnlyDictionary<string, TValue>, IReadOnlyList<KeyValuePair<string, TValue>>
 #endif
     {
-        [DebuggerDisplay("{Char}, Child: {ChildChar} at {ChildIndex}, Match: {MatchIndex}, Children: {Children?.Count ?? 0}")]
+        [DebuggerDisplay("{Char}, Child: {ChildChar} at {ChildIndex}, Match: {MatchIndex}, Children: {Children}")]
         private struct Node
         {
             /// <summary>
