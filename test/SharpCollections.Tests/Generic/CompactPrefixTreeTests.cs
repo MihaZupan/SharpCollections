@@ -109,11 +109,11 @@ namespace SharpCollections.Generic
         {
             CompactPrefixTree<int> tree = new CompactPrefixTree<int>
             {
-                { "ümlaut", 12345 }
+                { "ümlaüt", 12345 }
             };
-            Assert.False(tree.ContainsKey("umlaut"));
-            Assert.True(tree.ContainsKey("ümlaut"));
-            Assert.False(tree.ContainsKey("Ümlaut"));
+            Assert.False(tree.ContainsKey("umlaüt"));
+            Assert.True(tree.ContainsKey("ümlaüt"));
+            Assert.False(tree.ContainsKey("Ümlaüt"));
 
             // We don't support Right-To-Left, don't push it
         }
@@ -208,6 +208,8 @@ namespace SharpCollections.Generic
             Assert.Equal(12, tree.TreeCapacity); // 1, 3, 6, 12
             // 1 => 3 happens because internally when adding "foo bar", we call Ensure(1 + 2) to accomodate two leaf nodes
             // After that the capacity is doubled
+            Assert.Equal(2, tree.ChildrenCount); // only "foo bar" and "foobar" will force a child (ChildrenCount is double the amount of actual children entries)
+            Assert.Equal(2, tree.ChildrenCapacity);
 
             tree = new CompactPrefixTree<int>(new[]
             {
@@ -221,6 +223,8 @@ namespace SharpCollections.Generic
             Assert.Equal(5, tree.Capacity); // Set correctly since it was known at construction-time
             Assert.Equal(7, tree.TreeSize);
             Assert.Equal(10, tree.TreeCapacity); // Set to 2 * input.Count in the constructor
+            Assert.Equal(2, tree.ChildrenCount);
+            Assert.Equal(10, tree.ChildrenCapacity); // Initially set to 2 * input.Count
         }
 
         [Fact]
