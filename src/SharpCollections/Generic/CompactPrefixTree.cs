@@ -43,14 +43,11 @@ namespace SharpCollections.Generic
         }
 
         private Node[] _tree;
-        private static readonly Node[] _emptyTree = new Node[0];
-
         private KeyValuePair<string, TValue>[] _matches;
-        private static readonly KeyValuePair<string, TValue>[] _emptyMatches = new KeyValuePair<string, TValue>[0];
+        private int[] _children;
 
-        private int _childrenIndex = 0;
-        private int[] _children = _emptyChildren;
-        private static readonly int[] _emptyChildren = new int[0];
+        private readonly int[] _asciiRootMap = new int[128];
+        private Dictionary<char, int> _unicodeRootMap;
 
         #region Size and Capacity
 
@@ -75,7 +72,7 @@ namespace SharpCollections.Generic
                 if (value < TreeSize)
                     ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.value, ExceptionReason.SmallCapacity);
 
-                if (value != TreeSize)
+                if (value != TreeSize || value == 0)
                 {
                     Node[] newTree = new Node[value];
                     if (TreeSize > 0)
@@ -124,7 +121,7 @@ namespace SharpCollections.Generic
                 if (value < Count)
                     ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.value, ExceptionReason.SmallCapacity);
 
-                if (value != Count)
+                if (value != Count || value == 0)
                 {
                     KeyValuePair<string, TValue>[] newMatches = new KeyValuePair<string, TValue>[value];
                     if (Count > 0)
@@ -157,11 +154,11 @@ namespace SharpCollections.Generic
         }
 
         /// <summary>
-        /// Gets the size of the children buffer in the internal tree structure
+        /// Gets the number of elements in the children buffer in the internal tree structure
         /// <para>You might be looking for <see cref="Count"/></para>
         /// <para>Exposing this might help in deducing more efficient initial parameters</para>
         /// </summary>
-        public int ChildrenCount => _childrenIndex;
+        public int ChildrenCount { get; private set; }
         /// <summary>
         /// Gets or sets the capacity of the internal children buffer
         /// <para>You might be looking for <see cref="Capacity"/></para>
@@ -174,19 +171,19 @@ namespace SharpCollections.Generic
             }
             set
             {
-                if (value < _childrenIndex)
+                if (value < ChildrenCount)
                     ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.value, ExceptionReason.SmallCapacity);
 
-                if (value != _childrenIndex)
+                if (value != ChildrenCount || value == 0)
                 {
                     int[] newChildren = new int[value];
-                    if (_childrenIndex > 0)
+                    if (ChildrenCount > 0)
                     {
-                        Array.Copy(_children, 0, newChildren, 0, _childrenIndex);
+                        Array.Copy(_children, 0, newChildren, 0, ChildrenCount);
                     }
 
                     // Set new odd indexes to -1
-                    for (int i = _childrenIndex + 1; i < newChildren.Length; i += 2)
+                    for (int i = ChildrenCount + 1; i < newChildren.Length; i += 2)
                         newChildren[i] = -1;
 
                     _children = newChildren;
@@ -207,7 +204,7 @@ namespace SharpCollections.Generic
         {
             // Expansion logic as in System.Collections.Generic.List<T>
             Debug.Assert(min > _children.Length);
-            Debug.Assert(_childrenIndex % 2 == 0);
+            Debug.Assert(ChildrenCount % 2 == 0);
             int newCapacity = _children.Length * 2;
             if ((uint)min > int.MaxValue) newCapacity = int.MaxValue;
             if (newCapacity < min) newCapacity = min;
@@ -253,45 +250,43 @@ namespace SharpCollections.Generic
                 _unicodeRootMap.Add(rootChar, TreeSize);
             }
         }
-        private readonly int[] _asciiRootMap = new int[128];
-        private Dictionary<char, int> _unicodeRootMap;
 
         #endregion RootChar
+
+        public readonly bool IgnoreCase;
 
         private void Init(int matchCapacity, int treeCapacity, int childrenCapacity)
         {
             for (int i = 0; i < _asciiRootMap.Length; i++)
                 _asciiRootMap[i] = -1;
 
-            _matches = matchCapacity == 0 ? _emptyMatches : new KeyValuePair<string, TValue>[matchCapacity];
-            _tree = treeCapacity == 0 ? _emptyTree : new Node[treeCapacity];
-            EnsureChildrenCapacity(childrenCapacity);
+            Capacity = matchCapacity;
+            TreeCapacity = treeCapacity;
+            ChildrenCapacity = childrenCapacity;
         }
 
         /// <summary>
         /// Constructs a new <see cref="CompactPrefixTree{TValue}"/> with no initial prefixes
         /// </summary>
-        public CompactPrefixTree(int matchCapacity = 0, int treeCapacity = 0, int childrenCapacity = 0)
+        public CompactPrefixTree(int matchCapacity = 0, int treeCapacity = 0, int childrenCapacity = 0, bool ignoreCase = false)
         {
             Init(matchCapacity, treeCapacity, childrenCapacity);
+            IgnoreCase = ignoreCase;
         }
         /// <summary>
         /// Constructs a new <see cref="CompactPrefixTree{TValue}"/> with the supplied matches
         /// </summary>
         /// <param name="input">Matches to initialize the <see cref="CompactPrefixTree{TValue}"/> with. For best lookup performance, this collection should be sorted.</param>
-        public CompactPrefixTree(ICollection<KeyValuePair<string, TValue>> input)
+        public CompactPrefixTree(ICollection<KeyValuePair<string, TValue>> input, bool ignoreCase = false)
         {
             if (input == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.input);
 
             Init(input.Count, input.Count * 2, input.Count * 2);
+            IgnoreCase = ignoreCase;
 
-            using (var e = input.GetEnumerator())
+            foreach (KeyValuePair<string, TValue> element in input)
             {
-                for (int i = 0; i < input.Count; i++)
-                {
-                    e.MoveNext();
-                    TryInsert(e.Current, InsertionBehavior.ThrowOnExisting);
-                }
+                TryInsert(in element, InsertionBehavior.ThrowOnExisting);
             }
         }
 
@@ -401,14 +396,14 @@ namespace SharpCollections.Generic
             if (key.Length == 0) ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.key, ExceptionReason.String_Empty);
             Debug.Assert(!string.IsNullOrEmpty(key));
 
-            char rootChar = key[0];
+            char rootChar = IgnoreCase ? char.ToLowerInvariant(key[0]) : key[0];
             if (TryGetRoot(rootChar, out int rootNodeIndex))
             {
                 var tree = _tree;
                 ref Node node = ref tree[rootNodeIndex];
                 for (int i = 1; i < key.Length; i++)
                 {
-                    char c = key[i];
+                    char c = IgnoreCase ? char.ToLowerInvariant(key[i]) : key[i];
 
                     if (node.ChildChar == c)
                     {
@@ -429,17 +424,22 @@ namespace SharpCollections.Generic
                             // Find out for how long the two keys continue to share a prefix
                             int previousIndex = i;
                             int minLength = Math.Min(key.Length, previousKey.Length);
-                            for (; i < minLength; i++)
+                            if (IgnoreCase)
                             {
-                                // We haven't checked the i-th character of key so far
-                                if (key[i] != previousKey[i]) break;
+                                for (; i < minLength; i++)
+                                    if (char.ToLowerInvariant(key[i]) != char.ToLowerInvariant(previousKey[i])) break;
+                            }
+                            else
+                            {
+                                for (; i < minLength; i++)
+                                    if (key[i] != previousKey[i]) break;
                             }
 
                             if (i == minLength && key.Length == previousKey.Length)
                             {
                                 // The two keys are of the same length and i has reached the length of the key => duplicate
                                 Debug.Assert(i == key.Length && i == previousKey.Length);
-                                Debug.Assert(key == previousKey);
+                                Debug.Assert(key.Equals(previousKey, IgnoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal));
                                 goto HandleDuplicateKey;
                             }
 
@@ -451,15 +451,15 @@ namespace SharpCollections.Generic
                             if (intermediaryNodesToInsert > 0)
                             {
                                 node.ChildIndex = TreeSize;
-                                node.ChildChar = key[previousIndex];
+                                node.ChildChar = IgnoreCase ? char.ToLowerInvariant(key[previousIndex]) : key[previousIndex];
                                 EnsureTreeCapacity(TreeSize + intermediaryNodesToInsert);
                                 tree = _tree;
                                 for (int j = 0; j < intermediaryNodesToInsert - 1; j++)
                                 {
                                     tree[TreeSize + j] = new Node()
                                     {
-                                        Char = previousKey[previousIndex + j],
-                                        ChildChar = previousKey[previousIndex + j + 1],
+                                        Char = IgnoreCase ? char.ToLowerInvariant(previousKey[previousIndex + j]) : previousKey[previousIndex + j],
+                                        ChildChar = IgnoreCase ? char.ToLowerInvariant(previousKey[previousIndex + j + 1]) : previousKey[previousIndex + j + 1],
                                         ChildIndex = TreeSize + j + 1,
                                         MatchIndex = -1,
                                         Children = -1
@@ -468,7 +468,7 @@ namespace SharpCollections.Generic
                                 TreeSize += intermediaryNodesToInsert;
                                 tree[TreeSize - 1] = new Node()
                                 {
-                                    Char = previousKey[previousIndex + intermediaryNodesToInsert - 1],
+                                    Char = IgnoreCase ? char.ToLowerInvariant(previousKey[i - 1]) : previousKey[i - 1],
                                     MatchIndex = -1,
                                     Children = -1
                                 };
@@ -487,13 +487,13 @@ namespace SharpCollections.Generic
                                 Debug.Assert(key.Length != previousKey.Length);
                                 if (previousKey.Length < key.Length) // If the input was sorted, this should be hit
                                 {
-                                    Debug.Assert(key.StartsWith(previousKey));
-                                    node.ChildChar = key[i];
+                                    Debug.Assert(key.StartsWith(previousKey, IgnoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal));
+                                    c = node.ChildChar = IgnoreCase ? char.ToLowerInvariant(key[i]) : key[i];
                                     node.MatchIndex = previousMatchIndex;
                                     EnsureTreeCapacity(TreeSize + 1);
                                     _tree[TreeSize] = new Node()
                                     {
-                                        Char = key[i],
+                                        Char = c,
                                         MatchIndex = Count,
                                         Children = -1
                                     };
@@ -501,13 +501,13 @@ namespace SharpCollections.Generic
                                 else // if key.Length < previousKey.Length
                                 {
                                     Debug.Assert(key.Length < previousKey.Length);
-                                    Debug.Assert(previousKey.StartsWith(key));
-                                    node.ChildChar = previousKey[i];
+                                    Debug.Assert(previousKey.StartsWith(key, IgnoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal));
+                                    c = node.ChildChar = IgnoreCase ? char.ToLowerInvariant(previousKey[i]) : previousKey[i];
                                     node.MatchIndex = Count;
                                     EnsureTreeCapacity(TreeSize + 1);
                                     _tree[TreeSize] = new Node()
                                     {
-                                        Char = previousKey[i],
+                                        Char = c,
                                         MatchIndex = previousMatchIndex,
                                         Children = -1
                                     };
@@ -518,28 +518,28 @@ namespace SharpCollections.Generic
                             }
 
                             // Insert two leaf nodes
-                            Debug.Assert(node.Char != 0 && node.Char == previousKey[i - 1]);
+                            Debug.Assert(node.Char != 0 && node.Char == (IgnoreCase ? char.ToLowerInvariant(previousKey[i - 1]) : previousKey[i - 1]));
                             Debug.Assert(node.MatchIndex == -1);
                             Debug.Assert(node.Children == -1);
 
-                            node.ChildChar = previousKey[i];
-                            node.Children = _childrenIndex;
+                            c = node.ChildChar = IgnoreCase ? char.ToLowerInvariant(previousKey[i]) : previousKey[i];
+                            node.Children = ChildrenCount;
 
-                            EnsureChildrenCapacity(_childrenIndex + 2);
-                            _children[_childrenIndex] = TreeSize + 1;
-                            _childrenIndex += 2;
+                            EnsureChildrenCapacity(ChildrenCount + 2);
+                            _children[ChildrenCount] = TreeSize + 1;
+                            ChildrenCount += 2;
 
                             // Insert the two leaf nodes
                             EnsureTreeCapacity(TreeSize + 2);
                             _tree[TreeSize] = new Node()
                             {
-                                Char = previousKey[i],
+                                Char = c,
                                 MatchIndex = previousMatchIndex,
                                 Children = -1
                             };
                             _tree[TreeSize + 1] = new Node()
                             {
-                                Char = key[i],
+                                Char = IgnoreCase ? char.ToLowerInvariant(key[i]) : key[i],
                                 MatchIndex = Count,
                                 Children = -1
                             };
@@ -551,13 +551,13 @@ namespace SharpCollections.Generic
                         else
                         {
                             // This node has a child char, therefore we either don't have a match attached or that match is simply a prefix of the current key
-                            Debug.Assert(node.MatchIndex == -1 || key.StartsWith(_matches[node.MatchIndex].Key));
+                            Debug.Assert(node.MatchIndex == -1 || key.StartsWith(_matches[node.MatchIndex].Key, IgnoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal));
 
                             // Set this pair as the current node's first element in the Children list
-                            node.Children = _childrenIndex;
-                            EnsureChildrenCapacity(_childrenIndex + 2);
-                            _children[_childrenIndex] = TreeSize;
-                            _childrenIndex += 2;
+                            node.Children = ChildrenCount;
+                            EnsureChildrenCapacity(ChildrenCount + 2);
+                            _children[ChildrenCount] = TreeSize;
+                            ChildrenCount += 2;
 
                             InsertLeafNode(in pair, c);
                             return true;
@@ -581,10 +581,10 @@ namespace SharpCollections.Generic
                         while (true);
 
                         // A child node was not found, add a new one to children
-                        EnsureChildrenCapacity(_childrenIndex + 2);
-                        _children[lastChildrenIndex + 1] = _childrenIndex;
-                        _children[_childrenIndex] = TreeSize;
-                        _childrenIndex += 2;
+                        EnsureChildrenCapacity(ChildrenCount + 2);
+                        _children[lastChildrenIndex + 1] = ChildrenCount;
+                        _children[ChildrenCount] = TreeSize;
+                        ChildrenCount += 2;
 
                         InsertLeafNode(in pair, c);
                         return true;
@@ -601,7 +601,7 @@ namespace SharpCollections.Generic
                     // Either some other key is the leaf here, or the key is duplicated
                     if (previousMatch.Key.Length == key.Length)
                     {
-                        Debug.Assert(previousMatch.Key == key);
+                        Debug.Assert(previousMatch.Key.Equals(key, IgnoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal));
                         goto HandleDuplicateKey;
                     }
                     else
@@ -609,19 +609,19 @@ namespace SharpCollections.Generic
                         // It's not a duplicate but shares key.Length characters, therefore it's longer
                         // This will never occur if the input was sorted
                         Debug.Assert(previousMatch.Key.Length > key.Length);
-                        Debug.Assert(previousMatch.Key.StartsWith(key));
+                        Debug.Assert(previousMatch.Key.StartsWith(key, IgnoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal));
                         Debug.Assert(node.ChildChar == 0 && node.Children == -1);
 
                         // It is a leaf node
                         // Move the prevMatch one node inward
                         int previousMatchIndex = node.MatchIndex;
                         node.MatchIndex = Count;
-                        node.ChildChar = previousMatch.Key[key.Length];
+                        char c = node.ChildChar = IgnoreCase ? char.ToLowerInvariant(previousMatch.Key[key.Length]) : previousMatch.Key[key.Length];
                         node.ChildIndex = TreeSize;
                         EnsureTreeCapacity(TreeSize + 1);
                         _tree[TreeSize] = new Node()
                         {
-                            Char = previousMatch.Key[key.Length],
+                            Char = c,
                             MatchIndex = previousMatchIndex,
                             Children = -1
                         };
@@ -639,7 +639,7 @@ namespace SharpCollections.Generic
                 return true;
 
             HandleDuplicateKey:;
-                Debug.Assert(key == _matches[node.MatchIndex].Key);
+                Debug.Assert(key.Equals(_matches[node.MatchIndex].Key, IgnoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal));
                 if (behavior == InsertionBehavior.None) return false;
                 if (behavior == InsertionBehavior.OverwriteExisting)
                 {
@@ -732,7 +732,7 @@ namespace SharpCollections.Generic
         public bool TryMatchLongest(ReadOnlySpan<char> text, out KeyValuePair<string, TValue> match)
         {
             match = default;
-            if (text.Length == 0 || !TryGetRoot(text[0], out int nodeIndex))
+            if (text.Length == 0 || !TryGetRoot(IgnoreCase ? char.ToLowerInvariant(text[0]) : text[0], out int nodeIndex))
                 return false;
 #else
         public bool TryMatchLongest(string text, int offset, int length, out KeyValuePair<string, TValue> match)
@@ -745,7 +745,7 @@ namespace SharpCollections.Generic
                 ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.offsetLength, ExceptionReason.InvalidOffsetLength);
 
             match = default;
-            if (length == 0 || !TryGetRoot(text[offset], out int nodeIndex))
+            if (length == 0 || !TryGetRoot(IgnoreCase ? char.ToLowerInvariant(text[offset]) : text[offset], out int nodeIndex))
                 return false;
 #endif
 
@@ -762,7 +762,7 @@ namespace SharpCollections.Generic
             for (int i = offset + 1; i < limit; i++)
 #endif
             {
-                char c = text[i];
+                char c = IgnoreCase ? char.ToLowerInvariant(text[i]) : text[i];
 
                 if (node.ChildChar == c)
                 {
@@ -792,23 +792,36 @@ namespace SharpCollections.Generic
 
         LeafNodeFound:;
             ref KeyValuePair<string, TValue> possibleMatch = ref _matches[node.MatchIndex];
+            var possibleKey = possibleMatch.Key;
 #if NETCORE
-            if (possibleMatch.Key.Length <= text.Length)
+            if (possibleKey.Length <= text.Length)
             {
                 // Check that the rest of the strings match
-                if (text.Slice(depth).StartsWith(possibleMatch.Key.AsSpan(depth), StringComparison.Ordinal))
+                int sliceLength = possibleKey.Length - depth;
+                if (text.Slice(depth, sliceLength).Equals(possibleKey.AsSpan(depth, sliceLength), IgnoreCase))
                 {
                     matchIndex = node.MatchIndex;
                 }
             }
 #else
-            if (possibleMatch.Key.Length <= length)
+            if (possibleKey.Length <= length)
             {
                 // Check that the rest of the strings match
-                for (int i = offset + depth, j = depth; j < possibleMatch.Key.Length; i++, j++)
+                if (IgnoreCase)
                 {
-                    if (text[i] != possibleMatch.Key[j])
-                        goto Return;
+                    for (int i = offset + depth, j = depth; j < possibleKey.Length; i++, j++)
+                    {
+                        if (char.ToLowerInvariant(text[i]) != char.ToLowerInvariant(possibleKey[j]))
+                            goto Return;
+                    }
+                }
+                else
+                {
+                    for (int i = offset + depth, j = depth; j < possibleKey.Length; i++, j++)
+                    {
+                        if (text[i] != possibleKey[j])
+                            goto Return;
+                    }
                 }
                 matchIndex = node.MatchIndex;
             }
@@ -880,7 +893,7 @@ namespace SharpCollections.Generic
         public bool TryMatchExact(ReadOnlySpan<char> text, out KeyValuePair<string, TValue> match)
         {
             match = default;
-            if (text.Length == 0 || !TryGetRoot(text[0], out int nodeIndex))
+            if (text.Length == 0 || !TryGetRoot(IgnoreCase ? char.ToLowerInvariant(text[0]) : text[0], out int nodeIndex))
                 return false;
 #else
         public bool TryMatchExact(string text, int offset, int length, out KeyValuePair<string, TValue> match)
@@ -893,7 +906,7 @@ namespace SharpCollections.Generic
                 ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.offsetLength, ExceptionReason.InvalidOffsetLength);
 
             match = default;
-            if (length == 0 || !TryGetRoot(text[offset], out int nodeIndex))
+            if (length == 0 || !TryGetRoot(IgnoreCase ? char.ToLowerInvariant(text[offset]) : text[offset], out int nodeIndex))
                 return false;
 #endif
             int depth = 1;
@@ -916,7 +929,7 @@ namespace SharpCollections.Generic
             for (int i = offset + 1; i < limit; i++)
 #endif
             {
-                char c = text[i];
+                char c = IgnoreCase ? char.ToLowerInvariant(text[i]) : text[i];
 
                 if (node.ChildChar == c)
                 {
@@ -952,17 +965,29 @@ namespace SharpCollections.Generic
 
         LeafNodeFound:;
             match = _matches[node.MatchIndex];
+            var key = match.Key;
 #if NETCORE
-            return match.Key.Length == text.Length &&
-                text.Slice(depth).Equals(match.Key.AsSpan(depth), StringComparison.Ordinal);
+            return key.Length == text.Length &&
+                text.Slice(depth).Equals(key.AsSpan(depth), IgnoreCase);
 #else
-            if (match.Key.Length == length)
+            if (key.Length == length)
             {
                 // Check that the rest of the strings match
-                for (int i = offset + depth, j = depth; j < match.Key.Length; i++, j++)
+                if (IgnoreCase)
                 {
-                    if (text[i] != match.Key[j])
-                        return false;
+                    for (int i = offset + depth, j = depth; j < key.Length; i++, j++)
+                    {
+                        if (char.ToLowerInvariant(text[i]) != char.ToLowerInvariant(key[j]))
+                            return false;
+                    }
+                }
+                else
+                {
+                    for (int i = offset + depth, j = depth; j < key.Length; i++, j++)
+                    {
+                        if (text[i] != key[j])
+                            return false;
+                    }
                 }
                 return true;
             }
@@ -1027,7 +1052,7 @@ namespace SharpCollections.Generic
         public bool TryMatchShortest(ReadOnlySpan<char> text, out KeyValuePair<string, TValue> match)
         {
             match = default;
-            if (text.Length == 0 || !TryGetRoot(text[0], out int nodeIndex))
+            if (text.Length == 0 || !TryGetRoot(IgnoreCase ? char.ToLowerInvariant(text[0]) : text[0], out int nodeIndex))
                 return false;
 #else
         public bool TryMatchShortest(string text, int offset, int length, out KeyValuePair<string, TValue> match)
@@ -1040,7 +1065,7 @@ namespace SharpCollections.Generic
                 ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.offsetLength, ExceptionReason.InvalidOffsetLength);
 
             match = default;
-            if (length == 0 || !TryGetRoot(text[offset], out int nodeIndex))
+            if (length == 0 || !TryGetRoot(IgnoreCase ? char.ToLowerInvariant(text[offset]) : text[offset], out int nodeIndex))
                 return false;
 #endif
             ref Node node = ref _tree[nodeIndex];
@@ -1056,7 +1081,7 @@ namespace SharpCollections.Generic
             for (int i = offset + 1; i < limit; i++)
 #endif
             {
-                char c = text[i];
+                char c = IgnoreCase ? char.ToLowerInvariant(text[i]) : text[i];
 
                 if (node.ChildChar == c)
                 {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace SharpCollections
+namespace SharpCollections.Helpers
 {
     /// <summary>
     /// Inspired by CoreLib

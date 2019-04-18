@@ -363,6 +363,51 @@ namespace SharpCollections.Generic
         }
 
         [Fact]
+        public void SupportsCaseInsensitivity()
+        {
+            CompactPrefixTree<int> tree = new CompactPrefixTree<int>(ignoreCase: true)
+            {
+                { "Hell", 1 },
+                { "Hello", 2 },
+                { "Hello world", 3 },
+                { "Hello world!", 4 },
+                { "wor", 5 },
+                { "world", 6 },
+                { " ", 7 }
+            };
+
+            //             0         1
+            //             012345678901
+            string text = "HeLLo woRld!";
+
+            Assert.True(tree.TryMatchLongest(text, out var match));
+            Assert.Equal("Hello world!", match.Key);
+            Assert.True(tree.TryMatchLongest(text, 6, out match));
+            Assert.Equal("world", match.Key);
+            Assert.True(tree.ContainsKey("hello"));
+            int value = tree["wOr"];
+            Assert.Equal(5, value);
+
+#if NETCORE
+
+            Assert.False(tree.TryMatchExact(text.AsSpan(0, 3), out match));
+
+            Assert.True(tree.TryMatchExact(text.AsSpan(0, 4), out match));
+            Assert.Equal("Hell", match.Key);
+            Assert.True(tree.TryMatchExact(text.AsSpan(0, 5), out match));
+            Assert.Equal("Hello", match.Key);
+
+            Assert.False(tree.TryMatchExact(text.AsSpan(6), out match));
+            Assert.Throws<KeyNotFoundException>(() => { match = tree[text.AsSpan(6)]; });
+            tree.Add("world!", 7);
+            Assert.True(tree.TryMatchExact(text.AsSpan(6), out match));
+            Assert.Equal("world!", match.Key);
+            match = tree[text.AsSpan(6)];
+            Assert.Equal("world!", match.Key);
+#endif
+        }
+
+        [Fact]
         public void UsesAllRelevantCodePaths()
         {
             CompactPrefixTree<int> tree = new CompactPrefixTree<int>()
@@ -453,7 +498,7 @@ namespace SharpCollections.Generic
         [Fact]
         public void ExampleTest()
         {
-            CompactPrefixTree<int> tree = new CompactPrefixTree<int>
+            CompactPrefixTree<int> tree = new CompactPrefixTree<int>(ignoreCase: false)
             {
                 { "Hell", 1 },
                 { "Hello", 2 },

@@ -15,7 +15,9 @@ Support for legacy platforms (<= Net 4.6) will be dropped, should they prove to 
 
 [`CompactPrefixTree<TValue>`](examples/CompactPrefixTree.md)
 
-A highly memory-efficient string prefix tree.
+A highly memory-efficient and GC-friendly string prefix tree.
+
+Used in the amazing [Markdig library](https://github.com/lunet-io/markdig)
 
 ## License
 

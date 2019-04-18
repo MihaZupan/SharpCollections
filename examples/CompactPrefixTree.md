@@ -1,18 +1,20 @@
 # Compact Prefix Tree
 
-Supports fast shortest, exact and longest prefix queries, while consuming less memory than traditional tries.
-
-All operations return the matched key as well, which is useful when you do a lot of lookups on substrings.
-It saves you the substring allocation for the lookup/use after the lookup.
+Supports very fast construction, fast longest, exact and shortest prefix queries, while consuming less memory than traditional tries.
 
 Supports three main query operations: `TryMatchShortest`, `TryMatchExact`, `TryMatchLongest`
 
 All these methods also have (offset, length), (offset) and (`ReadOnlySpan<char>`) overloads.
 
+Case insensitivity can be set in the constructor.
+
+All operations return the matched key as well, which is useful when you do a lot of lookups on substrings.
+It saves you the substring allocation for the lookup/use after the lookup.
+
 ```csharp
 using SharpCollections.Generic;
 
-CompactPrefixTree<int> tree = new CompactPrefixTree<int>
+CompactPrefixTree<int> tree = new CompactPrefixTree<int>(ignoreCase: false)
 {
     { "Hell", 1 },
     { "Hello", 2 },
@@ -48,3 +50,12 @@ match = tree[3]; // Hello world!, 4
 // Only downside of this data structure is not being able to remove elements
 // tree.Remove("key");
 ```
+
+### Notes
+
+If your input data does not change, you can query tree's `Count`, `TreeSize` and `ChildrenCount` properties.
+
+Passing those exact values in the constructor will guarantee there is no wasted memory and no more allocations after the constructor exits.
+
+`CompactPrefixTree` assumes input strings do not contain the null `'\0'` character.
+Undefined things may happen if encountered in strings.

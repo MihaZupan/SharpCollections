@@ -6,7 +6,7 @@ namespace Benchmark
     {
         static void Main(string[] args)
         {
-            BenchmarkRunner.Run<PrefixTreeTesting>();
+            BenchmarkRunner.Run<CompactPrefixTreeVersusDictionary>();
         }
     }
 }
