@@ -9,13 +9,13 @@
     <Version>0.1.2</Version>
     <Authors>Miha Zupan</Authors>
     <Company>Miha Zupan</Company>
-    <Description>A set of specialized high-performance collections, not available in the framework</Description>
+    <Description>A set of specialized high-performance data structures, not available in the framework</Description>
     <Copyright>Miha Zupan</Copyright>
     <Product>SharpCollections</Product>
     <PackageId>SharpCollections</PackageId>
     <PackageProjectUrl>https://github.com/MihaZupan/SharpCollections</PackageProjectUrl>
     <NeutralLanguage>en</NeutralLanguage>
-    <PackageTags>collection performance tree prefixtree</PackageTags>
+    <PackageTags>collection performance prefixtree scheduler</PackageTags>
     <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   
@@ -24,5 +24,11 @@
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='net35'">
     <DefineConstants>LEGACY</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net35|AnyCPU'">
+    <DocumentationFile>C:\MihaZupan\SharpCollections\src\SharpCollections\SharpCollections.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net35|AnyCPU'">
+    <DocumentationFile>C:\MihaZupan\SharpCollections\src\SharpCollections\SharpCollections.xml</DocumentationFile>
   </PropertyGroup>
 </Project>

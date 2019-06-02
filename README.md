@@ -1,6 +1,6 @@
 # Sharp Collections [![Build Status](https://travis-ci.org/MihaZupan/SharpCollections.svg?branch=master)](https://travis-ci.org/MihaZupan/SharpCollections) [![Build status](https://ci.appveyor.com/api/projects/status/uwno7633b39ikdvn/branch/master?svg=true)](https://ci.appveyor.com/project/MihaZupan/sharpcollections/branch/master) [![Coverage Status](https://coveralls.io/repos/github/MihaZupan/SharpCollections/badge.svg?branch=master)](https://coveralls.io/github/MihaZupan/SharpCollections?branch=master) [![NuGet](https://img.shields.io/nuget/v/SharpCollections.svg)](https://www.nuget.org/packages/SharpCollections/) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)][PayPalMe]
 
-A set of specialized high-performance collections, not available in the framework.
+A set of specialized high-performance data structures, not available in the framework.
 
 Compatible with Framework 3.5+, Standard 2.0+ and Core 2.1+.
 
@@ -9,7 +9,7 @@ Newer features (like spans) are available thanks to preprocessor directives.
 Support for legacy platforms (<= Net 4.6) will be dropped, should they prove to complicate development.
 
 
-## Currently available collections
+## Currently available
 
 #### Compact Prefix Tree
 
@@ -18,6 +18,15 @@ Support for legacy platforms (<= Net 4.6) will be dropped, should they prove to 
 A highly memory-efficient and GC-friendly string prefix tree.
 
 Used in the amazing [Markdig library](https://github.com/lunet-io/markdig)
+
+#### WorkScheduler
+
+[`WorkScheduler<T>`](examples/WorkScheduler.md)
+
+A helper class that helps schedule work on your `TaskScheduler` of choice (`ThreadPool` by default).
+
+Work is scheduled in parallel, but only one item from each bucket at a time.
+
 
 ## License
 

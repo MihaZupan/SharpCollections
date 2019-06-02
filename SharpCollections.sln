@@ -23,9 +23,10 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{BC4EEDC3-A884-48AC-AA3A-6CFC6E19E36B}"
 	ProjectSection(SolutionItems) = preProject
 		examples\CompactPrefixTree.md = examples\CompactPrefixTree.md
+		examples\WorkScheduler.md = examples\WorkScheduler.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmark", "test\Benchmark\Benchmark.csproj", "{0D044410-9A38-4FA3-A6D1-AFE14450D27C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmark", "test\Benchmark\Benchmark.csproj", "{0D044410-9A38-4FA3-A6D1-AFE14450D27C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

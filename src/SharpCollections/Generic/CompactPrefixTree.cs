@@ -243,7 +243,7 @@ namespace SharpCollections.Generic
             }
             else
             {
-                if (_unicodeRootMap == null)
+                if (_unicodeRootMap is null)
                 {
                     _unicodeRootMap = new Dictionary<char, int>();
                 }
@@ -253,6 +253,9 @@ namespace SharpCollections.Generic
 
         #endregion RootChar
 
+        /// <summary>
+        /// Indicates whether matching ignores character casing.
+        /// </summary>
         public readonly bool IgnoreCase;
 
         private void Init(int matchCapacity, int treeCapacity, int childrenCapacity)
@@ -277,9 +280,10 @@ namespace SharpCollections.Generic
         /// Constructs a new <see cref="CompactPrefixTree{TValue}"/> with the supplied matches
         /// </summary>
         /// <param name="input">Matches to initialize the <see cref="CompactPrefixTree{TValue}"/> with. For best lookup performance, this collection should be sorted.</param>
+        /// <param name="ignoreCase">Indicates whether matching will ignore character casing.</param>
         public CompactPrefixTree(ICollection<KeyValuePair<string, TValue>> input, bool ignoreCase = false)
         {
-            if (input == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.input);
+            if (input is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.input);
 
             Init(input.Count, input.Count * 2, input.Count * 2);
             IgnoreCase = ignoreCase;
@@ -392,7 +396,7 @@ namespace SharpCollections.Generic
         private bool TryInsert(in KeyValuePair<string, TValue> pair, InsertionBehavior behavior)
         {
             string key = pair.Key;
-            if (key == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.key);
+            if (key is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.key);
             if (key.Length == 0) ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.key, ExceptionReason.String_Empty);
             Debug.Assert(!string.IsNullOrEmpty(key));
 
@@ -703,7 +707,7 @@ namespace SharpCollections.Generic
         /// <returns>True if a match was found, false otherwise</returns>
         public bool TryMatchLongest(string text, out KeyValuePair<string, TValue> match)
         {
-            if (text == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.text);
+            if (text is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.text);
 #if NETCORE
             return TryMatchLongest(text.AsSpan(), out match);
 #else
@@ -738,7 +742,7 @@ namespace SharpCollections.Generic
         public bool TryMatchLongest(string text, int offset, int length, out KeyValuePair<string, TValue> match)
         {
             int limit = offset + length;
-            if (text == null)
+            if (text is null)
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.text);
 
             if (offset < 0 || length < 0 || text.Length < limit)
@@ -864,7 +868,7 @@ namespace SharpCollections.Generic
         /// <returns>True if a match was found, false otherwise</returns>
         public bool TryMatchExact(string text, out KeyValuePair<string, TValue> match)
         {
-            if (text == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.text);
+            if (text is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.text);
 #if NETCORE
             return TryMatchExact(text.AsSpan(), out match);
 #else
@@ -899,7 +903,7 @@ namespace SharpCollections.Generic
         public bool TryMatchExact(string text, int offset, int length, out KeyValuePair<string, TValue> match)
         {
             int limit = offset + length;
-            if (text == null)
+            if (text is null)
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.text);
 
             if (offset < 0 || length < 0 || text.Length < limit)
@@ -1023,7 +1027,7 @@ namespace SharpCollections.Generic
         /// <returns>True if a match was found, false otherwise</returns>
         public bool TryMatchShortest(string text, out KeyValuePair<string, TValue> match)
         {
-            if (text == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.text);
+            if (text is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.text);
 #if NETCORE
             return TryMatchShortest(text.AsSpan(), out match);
 #else
@@ -1058,7 +1062,7 @@ namespace SharpCollections.Generic
         public bool TryMatchShortest(string text, int offset, int length, out KeyValuePair<string, TValue> match)
         {
             int limit = offset + length;
-            if (text == null)
+            if (text is null)
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.text);
 
             if (offset < 0 || length < 0 || text.Length < limit)
