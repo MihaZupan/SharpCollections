@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Miha Zupan. All rights reserved.
 // This file is licensed under the BSD-Clause 2 license. 
 // See the license.txt file in the project root for more information.
-#if NETCORE
+#if NETSTANDARD
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -170,8 +170,12 @@ namespace SharpCollections.Generic
                 lock (_workHeap)
                 {
                     nodes = new Node[_pendingWorkItems];
-                    _workHeap.AsSpan(1, _workHeapCount).CopyTo(nodes);
+
+                    Array.Copy(_workHeap, 1, nodes, 0, _workHeapCount);
+                    Array.Clear(_workHeap, 1, _workHeapCount);
                     i = _workHeapCount;
+                    _workHeapCount = 0;
+
                     foreach (var updateGroup in _buckets.Values)
                     {
                         if (updateGroup is null)
@@ -180,8 +184,6 @@ namespace SharpCollections.Generic
                         foreach (var node in updateGroup)
                             nodes[i++] = node;
                     }
-                    _workHeap.AsSpan(1, _workHeapCount).Clear();
-                    _workHeapCount = 0;
                     _buckets.Clear();
                 }
             }

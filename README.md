@@ -15,6 +15,8 @@ Support for legacy platforms (<= Net 4.6) will be dropped, should they prove to 
 
 [`CompactPrefixTree<TValue>`](examples/CompactPrefixTree.md)
 
+Available from Framework 3.5.
+
 A highly memory-efficient and GC-friendly string prefix tree.
 
 Used in the amazing [Markdig library](https://github.com/lunet-io/markdig)
@@ -22,6 +24,8 @@ Used in the amazing [Markdig library](https://github.com/lunet-io/markdig)
 #### WorkScheduler
 
 [`WorkScheduler<T>`](examples/WorkScheduler.md)
+
+Available from Standard 2.0.
 
 A helper class that helps schedule work on your `TaskScheduler` of choice (`ThreadPool` by default).
 

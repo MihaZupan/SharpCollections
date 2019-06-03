@@ -18,13 +18,17 @@
     <PackageTags>collection performance prefixtree scheduler</PackageTags>
     <LangVersion>7.3</LangVersion>
   </PropertyGroup>
-  
+
   <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(TargetFramework)', '^netcoreapp\d'))">
-    <DefineConstants>NETCORE</DefineConstants>
+    <DefineConstants>$(DefineConstants);NETCORE;NETSTANDARD</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(TargetFramework)', '^netstandard\d'))">
+    <DefineConstants>$(DefineConstants);NETSTANDARD</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='net35'">
-    <DefineConstants>LEGACY</DefineConstants>
+    <DefineConstants>$(DefineConstants);LEGACY</DefineConstants>
   </PropertyGroup>
+
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net35|AnyCPU'">
     <DocumentationFile>C:\MihaZupan\SharpCollections\src\SharpCollections\SharpCollections.xml</DocumentationFile>
   </PropertyGroup>
