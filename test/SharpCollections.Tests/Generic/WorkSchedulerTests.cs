@@ -1,4 +1,5 @@
 ﻿#if NETCORE
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -316,6 +317,112 @@ namespace SharpCollections.Generic
             Assert.Empty(workItems);
 
             Assert.Equal(0, scheduler.PendingWorkItems);
+        }
+
+        [Fact]
+        public async Task ProcessesMassiveWorkBuffer()
+        {
+            const int bucketSize = 4;
+            var rng = new Random();
+
+            void Shuffle<T>(T[] array)
+            {
+                int n = array.Length;
+                while (n > 1)
+                {
+                    int k = rng.Next(n--);
+                    T temp = array[n];
+                    array[n] = array[k];
+                    array[k] = temp;
+                }
+            }
+
+            byte[] priorities = new byte[256];
+            for (int i = 0; i < priorities.Length; i++) priorities[i] = (byte)i;
+            Shuffle(priorities);
+
+            byte[][] buckets = new byte[256][];
+            for (int i = 0; i < buckets.Length; i++)
+            {
+                var bucket = buckets[i] = new byte[bucketSize];
+                rng.NextBytes(bucket);
+                for (int j = 0; j < bucket.Length; j++)
+                    if (bucket[j] == 0) bucket[j] = (byte)rng.Next(1, 256);
+            }
+
+            long value = 0;
+            ManualResetEvent mre = new ManualResetEvent(false);
+
+            WorkScheduler<byte> scheduler = new WorkScheduler<byte>(work => {
+                Interlocked.Add(ref value, work);
+                mre.WaitOne();
+                mre.Reset();
+                return Task.CompletedTask;
+            }, maxDegreeOfParallelism: 1);
+
+            scheduler.Enqueue(1, -1, 0);
+            SpinWait.SpinUntil(() => Interlocked.Read(ref value) == 1);
+            value = 0;
+
+            for (int i = 0; i < priorities.Length; i++)
+            {
+                byte priority = priorities[i];
+                var bucket = buckets[priority];
+                for (int j = 0; j < bucket.Length; j++)
+                {
+                    scheduler.Enqueue(work: bucket[j], bucket: i, bucketPriority: priority);
+                }
+            }
+
+            int count = 256 * bucketSize;
+            Assert.Equal(count, scheduler.PendingWorkItems);
+
+            for (int i = 255; i >= 0; i--)
+            {
+                var bucket = buckets[i];
+                for (int j = 0; j < bucket.Length; j++)
+                {
+                    int pending = scheduler.PendingWorkItems;
+                    Assert.True(count == pending || count == pending - 1);
+                    mre.Set();
+                    SpinWait.SpinUntil(() => Interlocked.Read(ref value) == bucket[j]);
+                    value = 0;
+                    count--;
+                    pending = scheduler.PendingWorkItems;
+                    Assert.True(count == pending || count == pending - 1);
+                }
+            }
+
+            Assert.Equal(0, scheduler.PendingWorkItems);
+
+            for (int i = 0; i < priorities.Length; i++)
+            {
+                byte priority = priorities[i];
+                var bucket = buckets[priority];
+                for (int j = 0; j < bucket.Length; j++)
+                {
+                    scheduler.Enqueue(work: bucket[j], bucket: i, bucketPriority: priority);
+                }
+            }
+
+            Assert.Equal(256 * bucketSize, scheduler.PendingWorkItems);
+
+            _ = Task.Run(async () => { await Task.Delay(100); mre.Set(); });
+
+            var workItems = await scheduler.StopAndWaitForCompletionAsync();
+
+            Assert.Equal(0, scheduler.PendingWorkItems);
+            Assert.Equal(256 * bucketSize, workItems.Length);
+
+            count = 0;
+            for (int i = 255; i >= 0; i--)
+            {
+                var bucket = buckets[i];
+                for (int j = 0; j < bucket.Length; j++)
+                {
+                    Assert.Equal(workItems[count++], bucket[j]);
+                }
+            }
         }
     }
 }
