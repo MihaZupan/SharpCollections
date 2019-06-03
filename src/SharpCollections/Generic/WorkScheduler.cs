@@ -290,7 +290,12 @@ namespace SharpCollections.Generic
 
             var max = _workHeap[1];
 
-            var tmp = _workHeap[1] = _workHeap[_workHeapCount--];
+            var tmp = _workHeap[1] = _workHeap[_workHeapCount];
+
+            _workHeap[_workHeapCount--] = default;
+
+            if (_workHeapCount == 0)
+                return max;
 
             ulong priority = tmp.Priority;
             int pos = 1;
