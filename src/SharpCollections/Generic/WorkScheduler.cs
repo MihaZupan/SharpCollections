@@ -197,14 +197,14 @@ namespace SharpCollections.Generic
 
         private void ScheduleWorkItemOnTaskScheduler(Node work)
         {
+            Interlocked.Decrement(ref _pendingWorkItems);
+
             Task.Factory.StartNew(async () =>
             {
                 bool workPending = true;
                 while (workPending)
                 {
                     workPending = false;
-
-                    Interlocked.Decrement(ref _pendingWorkItems);
 
                     try
                     {
@@ -247,6 +247,7 @@ namespace SharpCollections.Generic
                             {
                                 work = DequeueFromWorkHeap();
                                 workPending = true;
+                                Interlocked.Decrement(ref _pendingWorkItems);
                             }
                         }
                     }
