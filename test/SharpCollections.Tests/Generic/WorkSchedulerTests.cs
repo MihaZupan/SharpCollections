@@ -9,26 +9,6 @@ namespace SharpCollections.Generic
 {
     public class WorkSchedulerTests
     {
-        private class MockTaskScheduler : TaskScheduler
-        {
-            public readonly List<Task> Tasks = new List<Task>();
-
-            protected override IEnumerable<Task> GetScheduledTasks()
-            {
-                return Tasks;
-            }
-
-            protected override void QueueTask(Task task)
-            {
-                Tasks.Add(task);
-            }
-
-            protected override bool TryExecuteTaskInline(Task task, bool taskWasPreviouslyQueued)
-            {
-                return false;
-            }
-        }
-
         [Fact]
         public async Task ExecutesWork()
         {
