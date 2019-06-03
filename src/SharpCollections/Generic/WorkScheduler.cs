@@ -33,7 +33,8 @@ namespace SharpCollections.Generic
 
             public int CompareTo(Node other)
             {
-                return Priority.CompareTo(other.Priority);
+                // DONE IN REVERSE ORDER to sort items in descending order
+                return other.Priority.CompareTo(Priority);
             }
         }
 
@@ -91,6 +92,7 @@ namespace SharpCollections.Generic
 
             _buckets = new Dictionary<long, Queue<Node>>(8);
             _workHeap = new Node[8];
+            _workCounter = 1L << 56;
         }
 
         /// <summary>
@@ -102,7 +104,7 @@ namespace SharpCollections.Generic
         /// <param name="priority">Scheduling priority that takes precedence over enqueueing time.</param>
         public void Enqueue(T work, long bucket, byte priority = 0)
         {
-            ulong actualPriority = (ulong)priority << 56 | (ulong)Interlocked.Increment(ref _workCounter);
+            ulong actualPriority = (ulong)priority << 56 | (ulong)Interlocked.Decrement(ref _workCounter);
 
             var workItem = new Node(work, actualPriority, bucket);
 
