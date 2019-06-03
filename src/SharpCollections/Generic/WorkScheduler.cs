@@ -153,13 +153,13 @@ namespace SharpCollections.Generic
             {
                 lock (_workHeap)
                 {
-                    _completionSource = new TaskCompletionSource<bool>();
+                    _completionSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
                     if (_activeWorkers == 0)
                         _completionSource.SetResult(false);
                 }
             }
 
-            await _completionSource.Task;
+            await _completionSource.Task.ConfigureAwait(false);
 
             Node[] nodes;
             int i;
@@ -197,53 +197,58 @@ namespace SharpCollections.Generic
 
         private void ScheduleWorkItemOnTaskScheduler(Node work)
         {
-            Interlocked.Decrement(ref _pendingWorkItems);
-
             Task.Factory.StartNew(async () =>
             {
-                try
+                bool workPending = true;
+                while (workPending)
                 {
-                    await _workRoutine(work.Value);
-                }
-                finally
-                {
-                    lock (_buckets)
+                    workPending = false;
+
+                    Interlocked.Decrement(ref _pendingWorkItems);
+
+                    try
                     {
-                        var queue = _buckets[work.Bucket];
-                        if (queue is null || queue.Count == 0)
+                        await _workRoutine(work.Value).ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        lock (_buckets)
                         {
-                            _buckets.Remove(work.Bucket);
-                        }
-                        else
-                        {
-                            work = queue.Dequeue();
-                            lock (_workHeap)
+                            var queue = _buckets[work.Bucket];
+                            if (queue is null || queue.Count == 0)
                             {
-                                EnqueueToWorkHeap(work);
+                                _buckets.Remove(work.Bucket);
+                            }
+                            else
+                            {
+                                work = queue.Dequeue();
+                                lock (_workHeap)
+                                {
+                                    EnqueueToWorkHeap(work);
+                                }
                             }
                         }
-                    }
 
-                    Monitor.Enter(_workHeap);
-                    if (IsStopped)
-                    {
-                        _activeWorkers--;
-                        if (_activeWorkers == 0)
+                        lock (_workHeap)
                         {
-                            _completionSource.SetResult(true);
+                            if (IsStopped)
+                            {
+                                _activeWorkers--;
+                                if (_activeWorkers == 0)
+                                {
+                                    _completionSource.SetResult(true);
+                                }
+                            }
+                            else if (_workHeapCount == 0)
+                            {
+                                _activeWorkers--;
+                            }
+                            else
+                            {
+                                work = DequeueFromWorkHeap();
+                                workPending = true;
+                            }
                         }
-                        Monitor.Exit(_workHeap);
-                    }
-                    else if (_workHeapCount == 0)
-                    {
-                        _activeWorkers--;
-                        Monitor.Exit(_workHeap);
-                    }
-                    else
-                    {
-                        work = DequeueFromWorkHeap();
-                        Monitor.Exit(_workHeap);
-                        ScheduleWorkItemOnTaskScheduler(work);
                     }
                 }
             }, default, TaskCreationOptions.DenyChildAttach, _taskScheduler);
