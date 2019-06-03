@@ -45,6 +45,7 @@ namespace SharpCollections.Generic
         private int _pendingWorkItems;
 
         // Binary heap of work items - holds at most one item from each bucket at a time
+        // greater<Node> order is used - first node is max, children are in descending order
         private Node[] _workHeap;
         private int _workHeapCount;
 
@@ -171,10 +172,11 @@ namespace SharpCollections.Generic
                     i = _workHeapCount;
                     foreach (var updateGroup in _buckets.Values)
                     {
+                        if (updateGroup is null)
+                            continue;
+
                         foreach (var node in updateGroup)
-                        {
                             nodes[i++] = node;
-                        }
                     }
                     _workHeap.AsSpan(1, _workHeapCount).Clear();
                     _workHeapCount = 0;
