@@ -1,7 +1,5 @@
 ﻿#if NETCORE
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -169,6 +167,8 @@ namespace SharpCollections.Generic
                 return Task.CompletedTask;
             }, maxDegreeOfParallelism: 2);
 
+            Assert.Equal(2, scheduler.MaxDegreeOfParallelism);
+
             scheduler.Enqueue(1, 0);
             scheduler.Enqueue(2, 0);
             scheduler.Enqueue(3, 1);
@@ -206,12 +206,12 @@ namespace SharpCollections.Generic
                 return Task.CompletedTask;
             }, maxDegreeOfParallelism: 1);
 
-            scheduler.Enqueue(1, 0, priority: 1);
-            scheduler.Enqueue(2, 0, priority: 1);
-            scheduler.Enqueue(3, 1, priority: 3);
-            scheduler.Enqueue(4, 2, priority: 2);
-            scheduler.Enqueue(5, 1, priority: 3);
-            scheduler.Enqueue(6, 2, priority: 2);
+            scheduler.Enqueue(1, 0, bucketPriority: 1);
+            scheduler.Enqueue(2, 0, bucketPriority: 1);
+            scheduler.Enqueue(3, 1, bucketPriority: 3);
+            scheduler.Enqueue(4, 2, bucketPriority: 2);
+            scheduler.Enqueue(5, 1, bucketPriority: 3);
+            scheduler.Enqueue(6, 2, bucketPriority: 2);
             // 1 goes first as it is the first one enqueued
             // then follow 3, 5, 4, 6, 2
 
@@ -278,11 +278,11 @@ namespace SharpCollections.Generic
                 return Task.CompletedTask;
             }, maxDegreeOfParallelism: 1);
 
-            scheduler.Enqueue(1, 0, priority: 1);
+            scheduler.Enqueue(1, 0, bucketPriority: 1);
             scheduler.Enqueue(2, 0);
-            scheduler.Enqueue(3, 1, priority: 2);
+            scheduler.Enqueue(3, 1, bucketPriority: 2);
             scheduler.Enqueue(4, 2);
-            scheduler.Enqueue(5, 1, priority: 3);
+            scheduler.Enqueue(5, 1, bucketPriority: 3);
             scheduler.Enqueue(6, 2);
 
             Assert.Equal(5, scheduler.PendingWorkItems);
@@ -300,6 +300,22 @@ namespace SharpCollections.Generic
             Assert.Equal(1, sum);
 
             Assert.Equal(new[] { 5, 3, 2, 4, 6 }, workItems);
+        }
+
+        [Fact]
+        public async Task StopsIfNoWorkIsPending()
+        {
+            long sum = 0;
+
+            WorkScheduler<int> scheduler = new WorkScheduler<int>(work => {
+                Interlocked.Add(ref sum, work);
+                return Task.CompletedTask;
+            });
+
+            var workItems = await scheduler.StopAndWaitForCompletionAsync();
+            Assert.Empty(workItems);
+
+            Assert.Equal(0, scheduler.PendingWorkItems);
         }
     }
 }

@@ -101,10 +101,10 @@ namespace SharpCollections.Generic
         /// </summary>
         /// <param name="work">Work item to be executed on the <see cref="TaskScheduler"/>.</param>
         /// <param name="bucket">Bucket that this work item belongs to. Only one work item from each bucket is processed at the same time.</param>
-        /// <param name="priority">Scheduling priority that takes precedence over enqueueing time.</param>
-        public void Enqueue(T work, long bucket, byte priority = 0)
+        /// <param name="bucketPriority">Scheduling priority that takes precedence over enqueueing time.</param>
+        public void Enqueue(T work, long bucket, byte bucketPriority = 0)
         {
-            ulong actualPriority = (ulong)priority << 56 | (ulong)Interlocked.Decrement(ref _workCounter);
+            ulong actualPriority = (ulong)bucketPriority << 56 | (ulong)Interlocked.Decrement(ref _workCounter);
 
             var workItem = new Node(work, actualPriority, bucket);
 
