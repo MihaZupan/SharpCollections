@@ -2,6 +2,7 @@
 // This file is licensed under the BSD-Clause 2 license. 
 // See the license.txt file in the project root for more information.
 #if NETSTANDARD
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -40,7 +41,7 @@ namespace SharpCollections.Generic
 
         private readonly TaskScheduler _taskScheduler;
         private readonly Func<T, Task> _workRoutine;
-        private readonly Dictionary<long, Queue<Node>> _buckets;
+        private readonly Dictionary<long, Queue<Node>?> _buckets;
         private int _activeWorkers;
         private long _workCounter;
         private int _pendingWorkItems;
@@ -51,7 +52,7 @@ namespace SharpCollections.Generic
         private int _workHeapCount;
         private readonly object _workHeapLock;
 
-        private TaskCompletionSource<bool> _completionSource;
+        private TaskCompletionSource<bool>? _completionSource;
 
         /// <summary>
         /// Number of work items that have not yet been scheduled
@@ -91,7 +92,7 @@ namespace SharpCollections.Generic
 
             MaxDegreeOfParallelism = maxDegreeOfParallelism <= 0 ? int.MaxValue : maxDegreeOfParallelism;
 
-            _buckets = new Dictionary<long, Queue<Node>>(8);
+            _buckets = new Dictionary<long, Queue<Node>?>(8);
             _workHeap = new Node[8];
             _workCounter = 1L << 56;
             _workHeapLock = new object();
@@ -114,7 +115,7 @@ namespace SharpCollections.Generic
             {
                 Interlocked.Increment(ref _pendingWorkItems);
 
-                if (_buckets.TryGetValue(bucket, out Queue<Node> queue) || IsStopped)
+                if (_buckets.TryGetValue(bucket, out Queue<Node>? queue) || IsStopped)
                 {
                     if (queue is null)
                     {
@@ -242,7 +243,7 @@ namespace SharpCollections.Generic
                                 _activeWorkers--;
                                 if (_activeWorkers == 0)
                                 {
-                                    _completionSource.SetResult(true);
+                                    _completionSource!.SetResult(true);
                                 }
                             }
                             else if (_workHeapCount == 0)
