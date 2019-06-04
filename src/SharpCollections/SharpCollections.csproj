@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net35;net45;netstandard2.0;netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>net35;net45;netstandard2.0;netcoreapp2.1;netcoreapp3.0</TargetFrameworks>
     <AssemblyName>SharpCollections</AssemblyName>
     <PackageLicenseExpression>BSD-2-Clause</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
