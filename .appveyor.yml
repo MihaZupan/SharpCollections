@@ -19,7 +19,7 @@ build:
   verbosity: minimal
 
 test_script:
-  - dotnet test ./test/SharpCollections.Tests -c Release --no-build && dotnet test ./test/SharpCollections.Tests -c Debug && dotnet test ./test/SharpCollections.Tests -c Release -f netcoreapp2.1 /p:CollectCoverage=true /p:Include=\"[SharpCollections*]*\" /p:CoverletOutputFormat=opencover /p:CoverletOutput=../../coverage.xml
+  - dotnet test ./test/SharpCollections.Tests -c Release --no-build && dotnet test ./test/SharpCollections.Tests -c Debug && dotnet test ./test/SharpCollections.Tests -c Release -f netcoreapp3.0 /p:CollectCoverage=true /p:Include=\"[SharpCollections*]*\" /p:CoverletOutputFormat=opencover /p:CoverletOutput=../../coverage.xml
  
 after_test:
   - csmacnz.Coveralls --opencover -i ./coverage.xml --useRelativePaths
