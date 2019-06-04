@@ -49,6 +49,7 @@ namespace SharpCollections.Generic
         // greater<Node> order is used - first node is max, children are in descending order
         private Node[] _workHeap;
         private int _workHeapCount;
+        private readonly object _workHeapLock;
 
         private TaskCompletionSource<bool> _completionSource;
 
@@ -93,6 +94,7 @@ namespace SharpCollections.Generic
             _buckets = new Dictionary<long, Queue<Node>>(8);
             _workHeap = new Node[8];
             _workCounter = 1L << 56;
+            _workHeapLock = new object();
         }
 
         /// <summary>
@@ -126,7 +128,7 @@ namespace SharpCollections.Generic
                 _buckets.Add(bucket, null);
             }
 
-            lock (_workHeap)
+            lock (_workHeapLock)
             {
                 if (_activeWorkers < MaxDegreeOfParallelism)
                 {
@@ -153,7 +155,7 @@ namespace SharpCollections.Generic
         {
             lock (_buckets)
             {
-                lock (_workHeap)
+                lock (_workHeapLock)
                 {
                     _completionSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
                     if (_activeWorkers == 0)
@@ -167,7 +169,7 @@ namespace SharpCollections.Generic
             int i;
             lock (_buckets)
             {
-                lock (_workHeap)
+                lock (_workHeapLock)
                 {
                     nodes = new Node[_pendingWorkItems];
 
@@ -226,14 +228,14 @@ namespace SharpCollections.Generic
                             else
                             {
                                 work = queue.Dequeue();
-                                lock (_workHeap)
+                                lock (_workHeapLock)
                                 {
                                     EnqueueToWorkHeap(work);
                                 }
                             }
                         }
 
-                        lock (_workHeap)
+                        lock (_workHeapLock)
                         {
                             if (IsStopped)
                             {
@@ -261,7 +263,7 @@ namespace SharpCollections.Generic
 
         private void EnqueueToWorkHeap(Node workNode)
         {
-            Debug.Assert(Monitor.IsEntered(_workHeap));
+            Debug.Assert(Monitor.IsEntered(_workHeapLock));
 
             if (_workHeapCount == _workHeap.Length - 1)
                 Array.Resize(ref _workHeap, _workHeap.Length * 2);
@@ -286,7 +288,7 @@ namespace SharpCollections.Generic
 
         private Node DequeueFromWorkHeap()
         {
-            Debug.Assert(Monitor.IsEntered(_workHeap));
+            Debug.Assert(Monitor.IsEntered(_workHeapLock));
 
             var max = _workHeap[1];
 
