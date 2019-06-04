@@ -3,7 +3,7 @@ sudo: false
 
 language: csharp
 mono: none
-dotnet: 2.2.203
+dotnet: 3.0.100
 
 script: >
   dotnet build -f netcoreapp2.1 -c Release &&
