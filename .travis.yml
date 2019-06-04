@@ -3,7 +3,6 @@ sudo: required
 
 language: csharp
 mono: none
-dotnet: 2.2.300
 
 addons:
   snaps:
