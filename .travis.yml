@@ -1,16 +1,23 @@
 dist: xenial
-sudo: false
+sudo: required
 
 language: csharp
 mono: none
-dotnet: 3.0.100
+
+addons:
+  snaps:
+  - name: dotnet-sdk
+    classic: true
+    channel: latest/beta
 
 script: >
-  dotnet build -f netcoreapp2.1 -c Release &&
-  dotnet build -f netcoreapp2.1 -c Debug &&
-  dotnet test test/SharpCollections.Tests -f netcoreapp2.1 -c Release --no-build --list-tests &&
-  dotnet test test/SharpCollections.Tests -f netcoreapp2.1 -c Release --no-build &&
-  dotnet test test/SharpCollections.Tests -f netcoreapp2.1 -c Debug --no-build
+  sudo snap alias dotnet-sdk.dotnet dotnet &&
+  dotnet --version &&
+  dotnet build -f netcoreapp3.0 -c Release &&
+  dotnet build -f netcoreapp3.0 -c Debug &&
+  dotnet test test/SharpCollections.Tests -f netcoreapp3.0 -c Release --no-build --list-tests &&
+  dotnet test test/SharpCollections.Tests -f netcoreapp3.0 -c Release --no-build &&
+  dotnet test test/SharpCollections.Tests -f netcoreapp3.0 -c Debug --no-build
 
 notifications:
   email: false
