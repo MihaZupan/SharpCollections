@@ -4,6 +4,7 @@
     <TargetFrameworks>netcoreapp3.0;net46;net471</TargetFrameworks>
     <IsPackable>false</IsPackable>
     <RootNamespace>SharpCollections</RootNamespace>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
