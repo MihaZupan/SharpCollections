@@ -113,8 +113,11 @@ namespace SharpCollections.Generic
         /// <param name="item"></param>
         public void Push(T item)
         {
-            if (item is null)
-                throw new ArgumentNullException(nameof(item));
+            if (default(T) == null)
+            {
+                if (item is null)
+                    throw new ArgumentNullException(nameof(item));
+            }
 
             if (Count == Capacity)
                 Grow();
