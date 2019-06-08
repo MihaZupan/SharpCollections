@@ -6,7 +6,7 @@
     <PackageLicenseExpression>BSD-2-Clause</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.1.3</Version>
+    <Version>0.1.4</Version>
     <Authors>Miha Zupan</Authors>
     <Company>Miha Zupan</Company>
     <Description>A set of specialized high-performance data structures, not available in the framework</Description>
