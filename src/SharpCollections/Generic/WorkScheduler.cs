@@ -5,7 +5,6 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -48,9 +47,7 @@ namespace SharpCollections.Generic
 
         // Binary heap of work items - holds at most one item from each bucket at a time
         // greater<Node> order is used - first node is max, children are in descending order
-        private Node[] _workHeap;
-        private int _workHeapCount;
-        private readonly object _workHeapLock;
+        private readonly BinaryHeap<Node> _workHeap;
 
         private TaskCompletionSource<bool>? _completionSource;
 
@@ -93,9 +90,8 @@ namespace SharpCollections.Generic
             MaxDegreeOfParallelism = maxDegreeOfParallelism <= 0 ? int.MaxValue : maxDegreeOfParallelism;
 
             _buckets = new Dictionary<long, Queue<Node>?>(8);
-            _workHeap = new Node[8];
+            _workHeap = new BinaryHeap<Node>(7);
             _workCounter = 1L << 56;
-            _workHeapLock = new object();
         }
 
         /// <summary>
@@ -119,8 +115,7 @@ namespace SharpCollections.Generic
                 {
                     if (queue is null)
                     {
-                        queue = new Queue<Node>(4);
-                        _buckets[bucket] = queue;
+                        _buckets[bucket] = queue = new Queue<Node>(4);
                     }
                     queue.Enqueue(workItem);
                     return;
@@ -129,7 +124,7 @@ namespace SharpCollections.Generic
                 _buckets.Add(bucket, null);
             }
 
-            lock (_workHeapLock)
+            lock (_workHeap)
             {
                 if (_activeWorkers < MaxDegreeOfParallelism)
                 {
@@ -137,7 +132,7 @@ namespace SharpCollections.Generic
                 }
                 else
                 {
-                    EnqueueToWorkHeap(workItem);
+                    _workHeap.Push(workItem);
                     return;
                 }
             }
@@ -156,7 +151,7 @@ namespace SharpCollections.Generic
         {
             lock (_buckets)
             {
-                lock (_workHeapLock)
+                lock (_workHeap)
                 {
                     _completionSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
                     if (_activeWorkers == 0)
@@ -170,14 +165,12 @@ namespace SharpCollections.Generic
             int i;
             lock (_buckets)
             {
-                lock (_workHeapLock)
+                lock (_workHeap)
                 {
                     nodes = new Node[_pendingWorkItems];
 
-                    Array.Copy(_workHeap, 1, nodes, 0, _workHeapCount);
-                    Array.Clear(_workHeap, 1, _workHeapCount);
-                    i = _workHeapCount;
-                    _workHeapCount = 0;
+                    for (i = 0; _workHeap.Count > 0; i++)
+                        nodes[i] = _workHeap.Pop();
 
                     foreach (var updateGroup in _buckets.Values)
                     {
@@ -229,14 +222,14 @@ namespace SharpCollections.Generic
                             else
                             {
                                 work = queue.Dequeue();
-                                lock (_workHeapLock)
+                                lock (_workHeap)
                                 {
-                                    EnqueueToWorkHeap(work);
+                                    _workHeap.Push(work);
                                 }
                             }
                         }
 
-                        lock (_workHeapLock)
+                        lock (_workHeap)
                         {
                             if (IsStopped)
                             {
@@ -246,13 +239,13 @@ namespace SharpCollections.Generic
                                     _completionSource!.SetResult(true);
                                 }
                             }
-                            else if (_workHeapCount == 0)
+                            else if (_workHeap.IsEmpty)
                             {
                                 _activeWorkers--;
                             }
                             else
                             {
-                                work = DequeueFromWorkHeap();
+                                work = _workHeap.Pop();
                                 workPending = true;
                                 Interlocked.Decrement(ref _pendingWorkItems);
                             }
@@ -260,66 +253,6 @@ namespace SharpCollections.Generic
                     }
                 }
             }, default, TaskCreationOptions.DenyChildAttach, _taskScheduler);
-        }
-
-        private void EnqueueToWorkHeap(Node workNode)
-        {
-            Debug.Assert(Monitor.IsEntered(_workHeapLock));
-
-            if (_workHeapCount == _workHeap.Length - 1)
-                Array.Resize(ref _workHeap, _workHeap.Length * 2);
-
-            int pos = ++_workHeapCount;
-            var priority = workNode.Priority;
-
-            while (pos > 1)
-            {
-                int parent = pos >> 1;
-                ref var parentNode = ref _workHeap[parent];
-
-                if (priority <= parentNode.Priority)
-                    break;
-
-                _workHeap[pos] = parentNode;
-                pos = parent;
-            }
-
-            _workHeap[pos] = workNode;
-        }
-
-        private Node DequeueFromWorkHeap()
-        {
-            Debug.Assert(Monitor.IsEntered(_workHeapLock));
-
-            var max = _workHeap[1];
-
-            var tmp = _workHeap[1] = _workHeap[_workHeapCount];
-
-            _workHeap[_workHeapCount--] = default;
-
-            if (_workHeapCount == 0)
-                return max;
-
-            ulong priority = tmp.Priority;
-            int pos = 1;
-            int child = pos << 1;
-
-            while (child <= _workHeapCount)
-            {
-                if (child != _workHeapCount && _workHeap[child].Priority < _workHeap[child + 1].Priority)
-                    child++;
-
-                if (priority < _workHeap[child].Priority)
-                    _workHeap[pos] = _workHeap[child];
-                else
-                    break;
-
-                pos = child;
-                child <<= 1;
-            }
-            _workHeap[pos] = tmp;
-
-            return max;
         }
     }
 }
