@@ -21,7 +21,7 @@ A highly memory-efficient and GC-friendly string prefix tree.
 
 Used in the amazing [Markdig library](https://github.com/lunet-io/markdig)
 
-#### WorkScheduler
+#### Work Scheduler
 
 [`WorkScheduler<T>`](examples/WorkScheduler.md)
 
@@ -30,6 +30,14 @@ Available from Standard 2.0.
 A helper class that helps schedule work on your `TaskScheduler` of choice (`ThreadPool` by default).
 
 Work is scheduled in parallel, but only one item from each bucket at a time.
+
+#### Binary Heap
+
+[`BinaryHeap<T>`](examples/BinaryHeap.md)
+
+Available from Framework 3.5.
+
+A simple generic binary heap implementation for types that implement `IComparable<T>`.
 
 
 ## License

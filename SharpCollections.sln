@@ -22,6 +22,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpCollections.Tests", "t
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{BC4EEDC3-A884-48AC-AA3A-6CFC6E19E36B}"
 	ProjectSection(SolutionItems) = preProject
+		examples\BinaryHeap.md = examples\BinaryHeap.md
 		examples\CompactPrefixTree.md = examples\CompactPrefixTree.md
 		examples\WorkScheduler.md = examples\WorkScheduler.md
 	EndProjectSection
