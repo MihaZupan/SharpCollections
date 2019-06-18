@@ -28,6 +28,11 @@ namespace SharpCollections.Helpers
             throw new IndexOutOfRangeException();
         }
 
+        public static void InvalidOperationException(ExceptionReason reason)
+        {
+            throw new InvalidOperationException(GetExceptionReason(reason));
+        }
+
         private static string GetArgumentName(ExceptionArgument argument)
         {
             string name = null;
@@ -72,6 +77,14 @@ namespace SharpCollections.Helpers
                 case ExceptionReason.DuplicateKey:
                     reasonString = "The given key is already present in the dictionary.";
                     break;
+
+                case ExceptionReason.ContainerEmpty:
+                    reasonString = "Container is empty.";
+                    break;
+
+                case ExceptionReason.MaximumCapacityReached:
+                    reasonString = "Maximum capacity has been reached.";
+                    break;
             }
 
             Debug.Assert(reasonString != null, "The enum value is not defined, please check the ExceptionReason Enum.");
@@ -96,5 +109,7 @@ namespace SharpCollections.Helpers
         SmallCapacity,
         InvalidOffsetLength,
         DuplicateKey,
+        ContainerEmpty,
+        MaximumCapacityReached,
     }
 }

@@ -48,7 +48,7 @@ namespace SharpCollections.Generic
         /// Constructs a new <see cref="BinaryHeap{T}"/> with the specified initial capacity.
         /// </summary>
         /// <param name="capacity">The initial capacity for the <see cref="BinaryHeap{T}"/>.</param>
-        public BinaryHeap(int capacity = 0)
+        public BinaryHeap(int capacity = 3)
         {
             if (capacity < 0 || capacity == int.MaxValue)
                 throw new ArgumentOutOfRangeException(nameof(capacity), "Must be >= 0 and < int.MaxValue");
@@ -64,7 +64,7 @@ namespace SharpCollections.Generic
             get
             {
                 if (Count == 0)
-                    throw new InvalidOperationException("BinaryHeap is empty");
+                    ThrowHelper.InvalidOperationException(ExceptionReason.ContainerEmpty);
 
                 return _heap[1];
             }
@@ -142,7 +142,7 @@ namespace SharpCollections.Generic
         private void Grow()
         {
             if (_heap.Length == int.MaxValue)
-                throw new InvalidOperationException("Reached maximum capacity");
+                ThrowHelper.InvalidOperationException(ExceptionReason.MaximumCapacityReached);
 
             int newCapacity = Capacity * 2;
 

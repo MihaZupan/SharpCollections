@@ -96,7 +96,7 @@ namespace SharpCollections.Generic
         [Fact]
         public void ResizesByDoubling()
         {
-            BinaryHeap<TestType> heap = new BinaryHeap<TestType>(3);
+            BinaryHeap<TestType> heap = new BinaryHeap<TestType>();
 
             Assert.Equal(0, heap.Count);
             Assert.Equal(3, heap.Capacity);
@@ -124,7 +124,7 @@ namespace SharpCollections.Generic
         [Fact]
         public void ClearsItems()
         {
-            BinaryHeap<TestType> heap = new BinaryHeap<TestType>(3);
+            BinaryHeap<TestType> heap = new BinaryHeap<TestType>();
 
             Assert.Equal(0, heap.Count);
 
@@ -142,11 +142,11 @@ namespace SharpCollections.Generic
         [Fact]
         public void ThrowsOnNullPush()
         {
-            BinaryHeap<string> heap = new BinaryHeap<string>(3);
+            BinaryHeap<string> heap = new BinaryHeap<string>();
 
             Assert.Throws<ArgumentNullException>(() => { heap.Push(default); });
 
-            BinaryHeap<int> heapOfValueTypes = new BinaryHeap<int>(3);
+            BinaryHeap<int> heapOfValueTypes = new BinaryHeap<int>();
 
             // Does not throw on default value
             heapOfValueTypes.Push(default);
@@ -180,6 +180,15 @@ namespace SharpCollections.Generic
             heap.Pop();
 
             heap.Capacity = 0;
+        }
+
+        [Fact]
+        public void ThrowsOnPopWhenEmpty()
+        {
+            BinaryHeap<int> heap = new BinaryHeap<int>();
+
+            Assert.Throws<InvalidOperationException>(() => { _ = heap.Top; });
+            Assert.Throws<InvalidOperationException>(() => { _ = heap.Pop(); });
         }
     }
 }
