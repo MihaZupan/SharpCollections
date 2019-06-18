@@ -7,3 +7,5 @@ A really simple generic class.
 `void Push(T)` - O(logN) insertion
 
 `T Pop()` - O(logN) retrieval
+
+Accepts up to `int.MaxValue - 1` items.

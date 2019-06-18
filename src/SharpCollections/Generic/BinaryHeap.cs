@@ -8,6 +8,7 @@ namespace SharpCollections.Generic
 {
     /// <summary>
     /// A simple generic Binary Heap implementation. Min-first order with default <see cref="IComparable{T}"/> behavior.
+    /// <para>Accepts up to <see cref="int.MaxValue"/> - 1 items.</para>
     /// </summary>
     /// <typeparam name="T">Type of heap element. Must implement <see cref="IComparable{T}"/>.</typeparam>
     public class BinaryHeap<T> where T: IComparable<T>
