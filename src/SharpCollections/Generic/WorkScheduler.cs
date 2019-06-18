@@ -85,7 +85,7 @@ namespace SharpCollections.Generic
         public WorkScheduler(Func<T, Task> workRoutine, int maxDegreeOfParallelism, TaskScheduler taskScheduler)
         {
             _workRoutine = workRoutine ?? throw new ArgumentNullException(nameof(workRoutine));
-            _taskScheduler = taskScheduler ?? throw new ArgumentNullException(nameof(_taskScheduler));
+            _taskScheduler = taskScheduler ?? throw new ArgumentNullException(nameof(taskScheduler));
 
             MaxDegreeOfParallelism = maxDegreeOfParallelism <= 0 ? int.MaxValue : maxDegreeOfParallelism;
 
