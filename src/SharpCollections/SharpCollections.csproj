@@ -17,6 +17,7 @@
     <NeutralLanguage>en</NeutralLanguage>
     <PackageTags>collection performance prefixtree scheduler</PackageTags>
     <LangVersion>8.0</LangVersion>
+    <DocumentationFile>SharpCollections.xml</DocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(TargetFramework)', '^netcoreapp\d'))">
@@ -29,10 +30,4 @@
     <DefineConstants>$(DefineConstants);LEGACY</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net35|AnyCPU'">
-    <DocumentationFile>C:\MihaZupan\SharpCollections\src\SharpCollections\SharpCollections.xml</DocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net35|AnyCPU'">
-    <DocumentationFile>C:\MihaZupan\SharpCollections\src\SharpCollections\SharpCollections.xml</DocumentationFile>
-  </PropertyGroup>
 </Project>
