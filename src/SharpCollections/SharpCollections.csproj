@@ -14,6 +14,7 @@
     <Product>SharpCollections</Product>
     <PackageId>SharpCollections</PackageId>
     <PackageProjectUrl>https://github.com/MihaZupan/SharpCollections</PackageProjectUrl>
+    <PackageIconUrl>https://avatars1.githubusercontent.com/u/25307628</PackageIconUrl>
     <NeutralLanguage>en</NeutralLanguage>
     <PackageTags>collection performance prefixtree scheduler</PackageTags>
     <LangVersion>8.0</LangVersion>
