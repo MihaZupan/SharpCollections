@@ -30,7 +30,7 @@ namespace SharpCollections.Generic
                 if (value < Count || value == int.MaxValue)
                     throw new ArgumentOutOfRangeException(nameof(value), "Must be >= Count and < int.MaxValue");
 
-                if (value != Count)
+                if (value != _heap.Length - 1)
                 {
                     T[] newHeap = new T[1 + value];
                     Array.Copy(_heap, 1, newHeap, 1, Count);
