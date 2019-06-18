@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace SharpCollections.Helpers
@@ -9,70 +8,75 @@ namespace SharpCollections.Helpers
     /// </summary>
     internal static class ThrowHelper
     {
-        public static void ThrowKeyNotFoundException(string key)
-        {
-            throw new KeyNotFoundException(key);
-        }
-
-        public static void ThrowArgumentNullException(ExceptionArgument argument)
+        public static void ArgumentNullException(ExceptionArgument argument)
         {
             throw new ArgumentNullException(GetArgumentName(argument));
         }
 
-        public static void ThrowArgumentException(ExceptionArgument argument, ExceptionReason reason)
+        public static void ArgumentException(ExceptionArgument argument, ExceptionReason reason)
         {
             throw new ArgumentException(GetArgumentName(argument), GetExceptionReason(reason));
         }
 
-        public static void ThrowArgumentOutOfRangeException(ExceptionArgument argument, ExceptionReason reason)
+        public static void ArgumentOutOfRangeException(ExceptionArgument argument, ExceptionReason reason)
         {
             throw new ArgumentOutOfRangeException(GetArgumentName(argument), GetExceptionReason(reason));
         }
 
-        public static void ThrowIndexOutOfRangeException()
+        public static void IndexOutOfRangeException()
         {
             throw new IndexOutOfRangeException();
         }
 
         private static string GetArgumentName(ExceptionArgument argument)
         {
+            string name = null;
+
             switch (argument)
             {
                 case ExceptionArgument.key:
                 case ExceptionArgument.input:
                 case ExceptionArgument.value:
-                case ExceptionArgument.length:
                 case ExceptionArgument.text:
-                    return argument.ToString();
+                case ExceptionArgument.item:
+                    name = argument.ToString();
+                    break;
 
                 case ExceptionArgument.offsetLength:
-                    return "offset and length";
-
-                default:
-                    Debug.Fail("The enum value is not defined, please check the ExceptionArgument Enum.");
-                    return "";
+                    name = "offset and length";
+                    break;
             }
+
+            Debug.Assert(name != null, "The enum value is not defined, please check the ExceptionArgument Enum.");
+
+            return name;
         }
         private static string GetExceptionReason(ExceptionReason reason)
         {
+            string reasonString = null;
+
             switch (reason)
             {
                 case ExceptionReason.String_Empty:
-                    return "String must not be empty.";
+                    reasonString = "String must not be empty.";
+                    break;
 
                 case ExceptionReason.SmallCapacity:
-                    return "Capacity was less than the current size.";
+                    reasonString = "Capacity was less than the current size.";
+                    break;
 
                 case ExceptionReason.InvalidOffsetLength:
-                    return "Offset and length must refer to a position in the string.";
+                    reasonString = "Offset and length must refer to a position in the string.";
+                    break;
 
                 case ExceptionReason.DuplicateKey:
-                    return "The given key is already present in the dictionary.";
-
-                default:
-                    Debug.Fail("The enum value is not defined, please check the ExceptionReason Enum.");
-                    return "";
+                    reasonString = "The given key is already present in the dictionary.";
+                    break;
             }
+
+            Debug.Assert(reasonString != null, "The enum value is not defined, please check the ExceptionReason Enum.");
+
+            return reasonString;
         }
     }
 
@@ -81,9 +85,9 @@ namespace SharpCollections.Helpers
         key,
         input,
         value,
-        length,
         offsetLength,
-        text
+        text,
+        item
     }
 
     internal enum ExceptionReason
