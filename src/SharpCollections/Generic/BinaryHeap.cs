@@ -76,9 +76,12 @@ namespace SharpCollections.Generic
         /// <returns>The item previously at the top of the heap.</returns>
         public T Pop()
         {
-            var top = Top;
+            if (Count == 0)
+                ThrowHelper.InvalidOperationException(ExceptionReason.ContainerEmpty);
 
             var heap = _heap;
+
+            var top = heap[1];
 
             var tmp = heap[1] = heap[Count];
 
