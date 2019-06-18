@@ -212,6 +212,8 @@ namespace SharpCollections.Generic
                     }
                     finally
                     {
+                        bool workHeapLocked = false;
+
                         lock (_buckets)
                         {
                             var queue = _buckets[work.Bucket];
@@ -222,34 +224,37 @@ namespace SharpCollections.Generic
                             else
                             {
                                 work = queue.Dequeue();
-                                lock (_workHeap)
-                                {
-                                    _workHeap.Push(work);
-                                }
+
+                                workHeapLocked = true;
+                                Monitor.Enter(_workHeap);
+
+                                _workHeap.Push(work);
                             }
                         }
 
-                        lock (_workHeap)
+                        if (!workHeapLocked)
+                            Monitor.Enter(_workHeap);
+
+                        if (IsStopped)
                         {
-                            if (IsStopped)
+                            _activeWorkers--;
+                            if (_activeWorkers == 0)
                             {
-                                _activeWorkers--;
-                                if (_activeWorkers == 0)
-                                {
-                                    _completionSource!.SetResult(true);
-                                }
-                            }
-                            else if (_workHeap.IsEmpty)
-                            {
-                                _activeWorkers--;
-                            }
-                            else
-                            {
-                                work = _workHeap.Pop();
-                                workPending = true;
-                                Interlocked.Decrement(ref _pendingWorkItems);
+                                _completionSource!.SetResult(true);
                             }
                         }
+                        else if (_workHeap.IsEmpty)
+                        {
+                            _activeWorkers--;
+                        }
+                        else
+                        {
+                            work = _workHeap.Pop();
+                            workPending = true;
+                            Interlocked.Decrement(ref _pendingWorkItems);
+                        }
+
+                        Monitor.Exit(_workHeap);
                     }
                 }
             }, default, TaskCreationOptions.DenyChildAttach, _taskScheduler);
