@@ -138,5 +138,48 @@ namespace SharpCollections.Generic
 
             Assert.Equal(0, heap.Count);
         }
+
+        [Fact]
+        public void ThrowsOnNullPush()
+        {
+            BinaryHeap<string> heap = new BinaryHeap<string>(3);
+
+            Assert.Throws<ArgumentNullException>(() => { heap.Push(default); });
+
+            BinaryHeap<int> heapOfValueTypes = new BinaryHeap<int>(3);
+
+            // Does not throw on default value
+            heapOfValueTypes.Push(default);
+        }
+
+        [Fact]
+        public void ThrowsOnInvalidCapacitySizes()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => { new BinaryHeap<string>(-1); });
+            Assert.Throws<ArgumentOutOfRangeException>(() => { new BinaryHeap<string>(int.MaxValue); });
+
+            BinaryHeap<string> heap = new BinaryHeap<string>(10);
+
+            Assert.Equal(0, heap.Count);
+            Assert.Equal(10, heap.Capacity);
+
+            // Can resize to fit
+            heap.Capacity = 0;
+
+            Assert.Equal(0, heap.Capacity);
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => { heap.Capacity = -1; });
+            Assert.Throws<ArgumentOutOfRangeException>(() => { heap.Capacity = int.MaxValue; });
+
+            heap.Push("foo");
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => { heap.Capacity = 0; });
+
+            heap.Capacity = 1;
+
+            heap.Pop();
+
+            heap.Capacity = 0;
+        }
     }
 }
